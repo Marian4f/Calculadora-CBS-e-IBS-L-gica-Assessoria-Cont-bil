@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calculadora CBS e IBS</title>
+<script>try{var t=localStorage.getItem("tema");if(t&&t!=="auto")document.documentElement.dataset.tema=t}catch(e){}</script>
+<style>
+:root{--bg:#f4f6fa;--side:#fff;--card:#fff;--line:#dfe4ec;--tx:#10233f;--mut:#5b6678;--ac:#f5bd18;--acx:#10233f;--err:#c62828;--warn:#a66b00}
+:root{color-scheme:light}
+
+:root[data-tema="claro"]{color-scheme:light;--bg:#f4f6fa;--side:#fff;--card:#fff;--line:#dfe4ec;--tx:#10233f;--mut:#5b6678;--ac:#f5bd18;--acx:#10233f;--err:#c62828;--warn:#a66b00}
+:root[data-tema="escuro"]{color-scheme:dark;--bg:#0b1526;--side:#101f35;--card:#14243b;--line:#293b55;--tx:#edf3fb;--mut:#aab8ca;--ac:#f5bd18;--acx:#10233f;--err:#ff8585;--warn:#ffd166}
+*{box-sizing:border-box}html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--tx);font:14px/1.45 Inter,system-ui,Segoe UI,Arial,sans-serif;display:block}
+aside{display:none}
+.brand{display:flex;gap:10px;align-items:center;margin-bottom:22px}.brand small{display:block;color:var(--mut)}
+.logo{width:34px;height:34px;border-radius:8px;background:var(--ac);color:var(--acx);display:grid;place-items:center;font-weight:700}
+.sec{font-size:11px;letter-spacing:.06em;color:var(--mut);margin:16px 6px 8px}.nav{padding:9px 12px;border-radius:8px;background:#8a97ab1f}
+main{max-width:1500px;margin:0 auto;padding:24px 30px;overflow:auto;min-width:0}h1{margin:0 0 4px;font-size:24px}.sub{color:var(--mut);margin:0 0 16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:16px}
+#drop{border:2px dashed var(--line);border-radius:12px;padding:28px;text-align:center;color:var(--mut);cursor:pointer}
+#drop.on,#drop:hover{border-color:var(--ac);color:var(--tx)}#drop b{color:var(--tx);display:block;font-size:16px;margin-bottom:4px}
+button{font:inherit;border-radius:8px;padding:8px 13px;cursor:pointer;border:1px solid var(--line);background:transparent;color:var(--tx)}
+button.p{background:var(--ac);color:var(--acx);border-color:var(--ac);font-weight:600}button:disabled{opacity:.55;cursor:wait}
+.bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px}
+.res{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:12px 0}
+.k{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px}.k span{color:var(--mut);font-size:12px}.k b{display:block;font-size:19px;margin-top:2px}
+.tw{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}th{color:var(--mut);font-weight:500}.n{text-align:right}
+input[type=text],input:not([type]){padding:5px 7px;background:var(--bg);color:var(--tx);border:1px solid var(--line);border-radius:6px;font:inherit;width:90px}
+.tag{display:inline-block;padding:1px 8px;border-radius:99px;background:#8a97ab26;font-size:12px;margin-left:6px}
+.ok{color:var(--ac)}.er{color:var(--err);white-space:normal;min-width:240px}.wr{color:var(--warn);white-space:normal;min-width:200px}.d{color:var(--mut);white-space:normal;min-width:160px;font-size:12px}
+.tema{display:flex;justify-content:flex-end;gap:4px;margin-bottom:6px}.tema button{padding:5px 11px;font-size:12px}.tema button.on{background:var(--ac);color:var(--acx);border-color:var(--ac);font-weight:600}
+.note{color:var(--mut);font-size:12px}label.c{display:flex;gap:6px;align-items:center;color:var(--mut)}
+details{margin-top:10px}pre{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px;overflow:auto;max-height:240px;font-size:12px}
+@media(max-width:760px){aside{display:none}main{padding:14px}}
+ 
+.tophead{display:flex;align-items:center;gap:28px;padding:4px 0 18px;border-bottom:3px solid #f5bd18;margin-bottom:22px;flex-wrap:wrap}
+.tophead img{width:285px;max-width:48vw;height:auto;object-fit:contain}
+.headcopy{border-left:2px solid #10233f;padding-left:26px}
+.headcopy h1{font-size:30px;margin:0 0 4px;color:var(--tx)}
+.headcopy p{margin:0;color:var(--mut);font-size:15px}
+.ratepill{margin-left:auto;border:1px solid #f5bd18;border-radius:30px;padding:9px 15px;font-weight:600;white-space:nowrap}
+footer{display:flex;align-items:center;gap:20px;border-top:2px solid #f5bd18;margin-top:34px;padding:16px 0;color:var(--mut);flex-wrap:wrap}
+footer img{width:190px;height:auto}
+.card{box-shadow:0 3px 14px #10233f0b;border-radius:12px}
+button.p{background:#102f50;color:white;border-color:#102f50}
+.tema button.on{background:#f5bd18;color:#10233f;border-color:#f5bd18}
+@media(max-width:760px){main{padding:14px}.tophead{gap:12px}.tophead img{width:180px}.headcopy{border:0;padding-left:0}.headcopy h1{font-size:22px}.ratepill{margin-left:0}}
+</style>
+</head>
+<body>
+<main>
+<div class="tophead">
+  <img src="assets/logo-logica.webp" alt="Lógica assessoria contábil">
+  <div class="headcopy"><h1>Calculadora CBS e IBS</h1><p>Simule os impactos da Reforma Tributária de forma simples e rápida</p></div>
+  <div class="ratepill">Alíquota CBS: 11,3%</div>
+</div>
+<div class="tema" id="tema" role="group" aria-label="Tema"><button data-t="auto">Auto</button><button data-t="escuro">Escuro</button><button data-t="claro">Claro</button></div>
+<p class="sub">1. Envie os XMLs · 2. Confira as classificações tributárias · 3. Calcule a CBS com as reduções aplicáveis.</p>
+
+<div class="card">
+  <div id="drop"><b>Arraste os XMLs aqui ou clique para escolher</b>NF-e, NFC-e, NFS-e (padrão nacional) e CT-e. Pode enviar vários de uma vez.<input id="file" type="file" accept=".xml,text/xml" multiple hidden></div>
+  <div class="bar">
+    <span class="note">Tributação para todos os itens:</span>
+    <input id="all" list="cl" placeholder="cClassTrib">
+    <button id="apply">Aplicar</button>
+    <label class="c"><input type="checkbox" id="ded" checked onchange="render()"> Excluir ICMS, ISS, PIS e COFINS da base (LC 214/2025, art. 12, §2º, V — vale de 2026 a 2032)</label>
+  </div>
+  <div class="bar"><button class="p" id="go" disabled>Recalcular</button><button id="csv" disabled>Baixar CSV</button><span class="note" id="msg"></span></div>
+  <datalist id="cl"></datalist>
+</div>
+
+<div class="card" id="hist" hidden></div><div id="sum"></div><div id="out"></div>
+<details class="card"><summary><b>Fontes oficiais e atualização</b><span class="note" id="upd"></span></summary>
+<ul class="note">
+<li><a href="https://www2.camara.leg.br/legin/fed/leicom/2025/leicomplementar-214-16-janeiro-2025-796905-normaatualizada-pl.docx">LC 214/2025, texto atualizado</a> e <a href="https://www2.camara.leg.br/legin/fed/leicom/2026/leicomplementar-227-13-janeiro-2026-798657-publicacaooriginal-177770-pl.html">LC 227/2026</a></li>
+
+<li><a href="https://consumo.tributos.gov.br">Portal do consumo (CBS/IBS)</a> · <a href="https://www.gov.br/receitafederal/pt-br/acesso-a-informacao/acoes-e-programas/programas-e-atividades/reforma-consumo/orientacoes-2026">Orientações 2026 da Receita</a></li>
+<li><a href="https://www.gov.br/nfse/pt-br/biblioteca/documentacao-tecnica">Notas técnicas da NFS-e</a> · <a href="https://www.nfe.fazenda.gov.br/portal/listaConteudo.aspx?tipoConteudo=04BIflQt1aY=">Notas técnicas da NF-e</a></li>
+</ul><p class="note">A calculadora utiliza as tabelas de classificação mantidas nos arquivos locais do projeto.</p></details>
+<p class="note">Os XMLs são processados localmente no seu navegador; nenhum dado é enviado à API da Receita Federal. A simulação considera CBS nominal de 11,3%, aplicando o percentual de redução correspondente ao cClassTrib selecionado. A base considera frete, seguro e outras despesas, conforme os parâmetros de base já existentes no sistema. Resultado estimativo, não substitui orientação fiscal.</p>
+<footer><img src="assets/logo-logica.webp" alt="Lógica assessoria contábil"><span>Conte com a Lógica para ir além!</span></footer>
+</main>
+<script>
+// Cálculo local: não há integração com API externa.
+const ALIQUOTA_CBS=11.3;
+const $=id=>document.getElementById(id);
+const brl=n=>(Number(n)||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+const pct=n=>n===undefined||n===null||n===""?"–":(Number(n)||0).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:4})+"%";
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const UFS={11:"RO",12:"AC",13:"AM",14:"RR",15:"PA",16:"AP",17:"TO",21:"MA",22:"PI",23:"CE",24:"RN",25:"PB",26:"PE",27:"AL",28:"SE",29:"BA",31:"MG",32:"ES",33:"RJ",35:"SP",41:"PR",42:"SC",43:"RS",50:"MS",51:"MT",52:"GO",53:"DF"};
+const TIPO={55:["NF-e","nfe"],65:["NFC-e","nfce"],57:["CT-e","cte"],91:["NFS-e","nfse"]};
+let docs=[],CL={};
+
+const T=(e,t)=>e?.getElementsByTagNameNS("*",t)[0];
+const V=(e,t)=>T(e,t)?.textContent.trim()??"";
+const N=(e,t)=>parseFloat(V(e,t))||0;
+
+function parse(xml,name){
+  const d=new DOMParser().parseFromString(xml,"application/xml");
+  if(d.querySelector("parsererror"))throw new Error("XML inválido");
+  const base={name,xml,res:null};
+  const nfe=T(d,"infNFe"),cte=T(d,"infCte"),nfs=T(d,"infNFSe")||T(d,"infDPS");
+  if(nfe){
+    const ide=T(nfe,"ide"),mod=+V(ide,"mod")||55;
+    const itens=[...nfe.getElementsByTagNameNS("*","det")].map(det=>{
+      const p=T(det,"prod"),imp=T(det,"imposto"),g=T(det,"IBSCBS");
+      return{n:+det.getAttribute("nItem"),cod:V(p,"NCM"),desc:V(p,"xProd"),qtd:N(p,"qCom")||1,un:V(p,"uCom")||"UN",
+        bruto:N(p,"vProd")+N(p,"vFrete")+N(p,"vSeg")+N(p,"vOutro")-N(p,"vDesc"),
+        imp:N(T(imp,"ICMS"),"vICMS")+N(T(imp,"ICMS"),"vFCP")+N(T(imp,"PIS"),"vPIS")+N(T(imp,"COFINS"),"vCOFINS"),ipi:N(T(imp,"IPI"),"vIPI"),is:N(T(imp,"IS"),"vIS"),
+        cst:V(g,"CST")||"000",cc:V(g,"cClassTrib")||"000001"}});
+    return{...base,tp:mod,nf:V(ide,"nNF"),uf:V(T(nfe,"emit"),"UF"),mun:+V(ide,"cMunFG"),dh:V(ide,"dhEmi")||V(ide,"dEmi")+"T12:00:00-03:00",itens};
+  }
+  if(cte){
+    const ide=T(cte,"ide"),mun=+V(ide,"cMunIni");
+    return{...base,tp:57,nf:V(ide,"nCT"),uf:V(ide,"UFIni")||UFS[String(mun).slice(0,2)],mun,dh:V(ide,"dhEmi"),
+      itens:[{n:1,cod:"",desc:"Serviço de transporte",qtd:1,un:"UN",bruto:N(T(cte,"vPrest"),"vTPrest"),imp:0,cst:V(T(cte,"IBSCBS"),"CST")||"000",cc:V(T(cte,"IBSCBS"),"cClassTrib")||"000001"}]};
+  }
+  if(nfs){
+    // Na NFS-e padrão nacional, a classificação pode estar aninhada
+    // em DPS/infDPS/IBSCBS/valores/trib/gIBSCBS.
+    const dps=T(d,"infDPS")||T(nfs,"infDPS")||nfs;
+    const ibscbs=T(dps,"IBSCBS")||T(nfs,"IBSCBS")||T(d,"IBSCBS");
+    const gTrib=T(dps,"gIBSCBS")||T(ibscbs,"gIBSCBS")||ibscbs;
+    const mun=+(V(dps,"cLocIncid")||V(dps,"cLocPrestacao")||V(dps,"cLocEmi")||
+                V(nfs,"cLocIncid")||V(nfs,"cLocPrestacao")||V(nfs,"cMun"));
+    const numero=V(nfs,"nNFSe")||V(dps,"nDPS")||V(nfs,"nDPS");
+    const data=V(dps,"dhEmi")||V(nfs,"dhEmi")||V(nfs,"dhProc")||V(dps,"dCompet")||V(nfs,"dCompet");
+    const grupoServ=T(dps,"vServPrest")||T(nfs,"vServPrest");
+    const grupoValores=T(dps,"valores")||T(nfs,"valores");
+    const vServ=N(grupoServ,"vServ")||N(grupoValores,"vServ");
+    const cst=V(gTrib,"CST")||V(ibscbs,"CST")||"000";
+    const cc=V(gTrib,"cClassTrib")||V(ibscbs,"cClassTrib")||"000001";
+    const impDps=N(dps,"vISSQN")+N(dps,"vPis")+N(dps,"vPIS")+N(dps,"vCofins");
+    const impNfse=N(nfs,"vISSQN")+N(nfs,"vPis")+N(nfs,"vPIS")+N(nfs,"vCofins");
+    return{...base,tp:91,nf:numero,uf:UFS[String(mun).slice(0,2)],mun,
+      dh:data.includes("T")?data:data+"T12:00:00-03:00",
+      itens:[{n:1,cod:(V(dps,"cNBS")||V(nfs,"cNBS")).replace(/\D/g,""),
+        desc:V(dps,"xDescServ")||V(nfs,"xDescServ"),qtd:1,un:"UN",
+        bruto:vServ||N(grupoServ,"vServPrest"),
+        imp:impDps||impNfse,
+        cst,cc}]};
+  }
+  throw new Error("tipo de documento ainda não suportado (BP-e, NF3e, NFCom…)");
+}
+
+async function load(files){
+  docs=[];const bad=[];
+  for(const f of [...files]){try{docs.push(parse(await f.text(),f.name))}catch(e){bad.push(f.name+": "+e.message)}}
+  $("msg").textContent=docs.length+" documento(s) carregado(s)"+(bad.length?" · ignorados: "+bad.join("; "):"");
+  $("go").disabled=!docs.length;$("csv").disabled=true;render();
+  // Após a leitura do XML, inicia a validação/cálculo sem exigir clique adicional.
+  if(docs.length) await calc();
+}
+$("drop").onclick=()=>$("file").click();$("file").onchange=e=>{load(e.target.files);e.target.value=""};
+$("drop").ondragover=e=>{e.preventDefault();$("drop").classList.add("on")};
+$("drop").ondragleave=()=>$("drop").classList.remove("on");
+$("drop").ondrop=e=>{e.preventDefault();$("drop").classList.remove("on");load(e.dataTransfer.files)};
+$("apply").onclick=()=>{const c=$("all").value.trim();if(!c)return;docs.forEach(d=>d.itens.forEach(i=>setCC(i,c)));render()};
+
+function setCC(i,c){i.cc=c;if(CL[c]?.cst)i.cst=CL[c].cst}
+window.chg=(a,b,k,v)=>{const i=docs[a].itens[b];k==="cc"?setCC(i,v.trim()):i.cst=v.trim();render()};
+
+// Carrega localmente as classificações e percentuais de redução preservados na pasta data.
+const carregarTabelas=(async()=>{
+  try{
+    const [grupos, classificacoes]=await Promise.all([
+      fetch("data/situacoes_tributarias_cbs_ibs.json").then(r=>r.json()),
+      fetch("data/classificacoes_tributarias_cbs_ibs.json").then(r=>r.json())
+    ]);
+    const cstPorCodigo={};
+    const walk=(lista,cst)=>{(lista||[]).forEach(g=>{
+      const codigo=String(g.codigo??cst??"").padStart(3,"0");
+      (g.classificacoesTributarias||[]).forEach(x=>cstPorCodigo[x.codigo]=codigo);
+    })};
+    walk(grupos);
+    classificacoes.forEach(x=>{
+      const codigo=String(x.codigo);
+      CL[codigo]={cst:cstPorCodigo[codigo]||"",d:x.descricao||"",redCBS:Number(x.percentualReducaoCbs)||0,
+        redIBSUF:Number(x.percentualReducaoIbsUf)||0,redIBSMun:Number(x.percentualReducaoIbsMun)||0};
+    });
+    $("cl").innerHTML=Object.entries(CL).map(([k,v])=>`<option value="${k}">${esc(k+" — "+v.d)}</option>`).join("");
+    $("upd").textContent=" · classificações locais carregadas";
+  }catch(e){$("msg").textContent="Não foi possível carregar as tabelas locais de classificação: "+e.message}
+})();
+// LC 214/2025, art. 12: valor da operação (frete, seguro, taxas e outras despesas entram); não entram IPI, IBS/CBS e descontos incondicionais;
+// ICMS, ISS, PIS e Cofins saem da base de 2026 a 2032 (§2º, V); o Imposto Seletivo integra a base.
+function baseOf(d,i){const y=+String(d.dh).slice(0,4);return Math.max(i.bruto-(i.ipi||0)+(i.is||0)-($("ded").checked&&y<=2032?i.imp:0),0)}
+// ---- Histórico salvo no próprio navegador (IndexedDB); nada é enviado a servidor ----
+const DB=new Promise(res=>{try{const r=indexedDB.open("calc-cbs-ibs",1);r.onupgradeneeded=()=>r.result.createObjectStore("calculos",{keyPath:"id",autoIncrement:true});r.onsuccess=()=>res(r.result);r.onerror=()=>res(null)}catch{res(null)}});
+async function hStore(mode,fn){const db=await DB;if(!db)return;return new Promise(ok=>{try{const t=db.transaction("calculos",mode),q=fn(t.objectStore("calculos"));t.oncomplete=()=>ok(q?.result);t.onerror=()=>ok()}catch{ok()}})}
+async function hSave(d){try{const c=JSON.parse(JSON.stringify({...d,raw:undefined}));c.em=Date.now();if(d.hid)c.id=d.hid;else delete c.id;const k=await hStore("readwrite",s=>s.put(c));if(k)d.hid=k}catch{}}
+async function renderHist(){
+  const h=$("hist"),l=(await hStore("readonly",s=>s.getAll()))||[];
+  if(!l.length){h.hidden=true;return}
+  h.hidden=false;
+  h.innerHTML=`<details><summary><b>Histórico neste navegador</b> <span class="note">· ${l.length} nota(s) · só você vê, nada vai para servidor</span></summary>
+  <div class="tw"><table><thead><tr><th>Data</th><th>Tipo</th><th>Nº</th><th>Arquivo</th><th class="n">CBS</th><th>Problemas</th><th></th></tr></thead><tbody>`+
+  l.sort((x,y)=>y.em-x.em).map(r=>{const c=r.itens.reduce((s,i)=>s+(i.cbs||0),0),p=r.itens.filter(i=>i.erros?.length).length;
+    return`<tr><td>${new Date(r.em).toLocaleString("pt-BR")}</td><td>${TIPO[r.tp]?.[0]||""}</td><td>${esc(r.nf)}</td><td>${esc(r.name)}</td><td class="n">${brl(c)}</td><td>${p||"–"}</td><td><button onclick="hAbrir(${r.id})">Abrir</button> <button onclick="hDel(${r.id})">Excluir</button></td></tr>`}).join("")+
+  `</tbody></table></div><div class="bar"><button onclick="hLimpa()">Apagar todo o histórico</button></div></details>`;
+}
+window.hAbrir=async id=>{const r=await hStore("readonly",s=>s.get(id));if(!r)return;r.hid=r.id;docs=[r];$("go").disabled=false;$("csv").disabled=false;$("msg").textContent="Nota aberta do histórico.";render();document.querySelector("main").scrollTo(0,0)};
+window.hDel=async id=>{await hStore("readwrite",s=>s.delete(id));renderHist()};
+window.hLimpa=async()=>{if(confirm("Apagar todo o histórico deste navegador?")){await hStore("readwrite",s=>s.clear());renderHist()}};
+
+async function calc(){
+  await carregarTabelas;
+  $("go").disabled=true;$("msg").textContent="Calculando localmente…";
+  for(const d of docs){
+    d.err=null;d.geral=[];
+    d.itens.forEach(i=>{
+      i.erros=[];i.alertas=[];
+      const c=CL[i.cc]||{};
+      const reducao=Number(c.redCBS)||0;
+      i.red=reducao;
+      i.aliqCBS=ALIQUOTA_CBS*(1-reducao/100);
+      i.cbs=+(baseOf(d,i)*i.aliqCBS/100).toFixed(2);
+      i.ibs=0;i.aliqIBSUF=0;i.aliqIBSMun=0;
+      if(!c.codigo && !CL[i.cc]) i.alertas.push({detail:"cClassTrib não localizado na tabela local; confira a classificação selecionada."});
+    });
+  }
+  for(const d of docs)await hSave(d);
+  $("msg").textContent="";$("go").disabled=false;$("csv").disabled=false;render();renderHist();
+}
+$("go").onclick=calc;
+
+function render(){
+  const all=docs.flatMap(d=>d.itens),calcd=all.some(i=>i.cbs!==undefined);
+  const S=(f)=>all.reduce((s,i)=>s+(f(i)||0),0),bad=all.filter(i=>i.erros?.length).length;
+  $("sum").innerHTML=docs.length?`<div class="res"><div class="k"><span>Documentos</span><b>${docs.length}</b></div><div class="k"><span>Itens</span><b>${all.length}</b></div>
+   <div class="k"><span>Itens com problema</span><b style="color:${bad?"var(--err)":"var(--ac)"}">${calcd?bad:"–"}</b></div>
+   <div class="k"><span>CBS</span><b>${brl(S(i=>i.cbs))}</b></div></div>`:"";
+  $("out").innerHTML=docs.map((d,a)=>{
+    const rows=d.itens.map((i,b)=>{
+      const st=i.erros?.length?`<td class="er">✗ ${i.erros.map(e=>esc((e.code?e.code+" · ":"")+(e.detail||e.title))).join("<br>")}</td>`:
+        i.alertas?.length?`<td class="wr">⚠ ${i.alertas.map(e=>esc(e.detail||e.title)).join("<br>")}</td>`:
+        i.cbs!==undefined?`<td class="ok">✓ Válido</td>`:"<td></td>";
+      return`<tr><td>${i.n}</td><td title="${esc(i.desc)}">${esc(i.cod)||"–"}</td><td class="n">${brl(baseOf(d,i))}</td>
+      <td><input value="${esc(i.cst)}" style="width:50px" onchange="chg(${a},${b},'cst',this.value)"></td>
+      <td><input value="${esc(i.cc)}" list="cl" onchange="chg(${a},${b},'cc',this.value)"></td><td class="d">${esc(CL[i.cc]?.d)}</td>
+      <td class="n">${pct(i.aliqCBS)}</td><td class="n">${i.cbs!==undefined?brl(i.cbs):"–"}</td><td>${i.red!==undefined?esc(i.red)+"%":"–"}</td>${st}</tr>`}).join("");
+    return`<div class="card"><b>${TIPO[d.tp][0]} ${esc(d.nf)}</b><span class="tag">${esc(d.uf)} · mun. ${d.mun}</span><span class="note"> ${esc(d.name)}</span>
+     ${d.err?`<p class="er">${esc(d.err)}</p>`:""}${d.geral?.length?`<p class="er">${d.geral.map(e=>esc(e.detail||e.title)).join("<br>")}</p>`:""}
+     <div class="tw"><table><thead><tr><th>Item</th><th>${d.tp===91?"NBS":"NCM"}</th><th class="n">Base</th><th>CST</th><th>cClassTrib</th><th>Tributação</th><th class="n">Alíquota CBS</th><th class="n">Valor CBS</th><th>Redução</th><th>Validação</th></tr></thead><tbody>${rows}</tbody></table></div>
+     
+     </div>`}).join("");
+}
+
+$("csv").onclick=()=>{
+  const l=[["Tipo","Numero","Item","NCM/NBS","Base","CST","cClassTrib","Aliquota CBS (%)","Reducao CBS (%)","Valor CBS","Status"]];
+  docs.forEach(d=>d.itens.forEach(i=>l.push([TIPO[d.tp][0],d.nf,i.n,i.cod,baseOf(d,i).toFixed(2),i.cst,i.cc,i.aliqCBS??"",i.red??"",(i.cbs||0).toFixed(2),(i.alertas||[]).map(e=>e.detail).join(" | ")||"Calculado localmente"])));
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\ufeff"+l.map(r=>r.join(";")).join("\n")],{type:"text/csv"}));a.download="cbs-ibs.csv";a.click();
+};
+renderHist();
+function setTema(t){const r=document.documentElement;t==="auto"?r.removeAttribute("data-tema"):r.dataset.tema=t;try{localStorage.setItem("tema",t)}catch{}document.querySelectorAll("#tema button").forEach(b=>b.classList.toggle("on",b.dataset.t===t))}
+document.querySelectorAll("#tema button").forEach(b=>b.onclick=()=>setTema(b.dataset.t));
+let tm="auto";try{tm=localStorage.getItem("tema")||"auto"}catch{}setTema(tm);
+</script>
+</body>
+</html>
