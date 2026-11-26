@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Calculadora CBS e IBS</title>
+<title>Calculadora CBS | Lógica Assessoria Contábil</title>
 <script>try{var t=localStorage.getItem("tema");if(t&&t!=="auto")document.documentElement.dataset.tema=t}catch(e){}</script>
 <style>
 :root{--bg:#f4f6fa;--side:#fff;--card:#fff;--line:#dfe4ec;--tx:#10233f;--mut:#5b6678;--ac:#f5bd18;--acx:#10233f;--err:#c62828;--warn:#a66b00}
@@ -28,7 +28,7 @@ button.p{background:var(--ac);color:var(--acx);border-color:var(--ac);font-weigh
 .k{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px}.k span{color:var(--mut);font-size:12px}.k b{display:block;font-size:19px;margin-top:2px}
 .tw{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:13px}
 th,td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}th{color:var(--mut);font-weight:500}.n{text-align:right}
-input[type=text],input:not([type]){padding:5px 7px;background:var(--bg);color:var(--tx);border:1px solid var(--line);border-radius:6px;font:inherit;width:90px}
+input[type=text],input[type=number],input:not([type]){padding:5px 7px;background:var(--bg);color:var(--tx);border:1px solid var(--line);border-radius:6px;font:inherit;width:90px}
 .tag{display:inline-block;padding:1px 8px;border-radius:99px;background:#8a97ab26;font-size:12px;margin-left:6px}
 .ok{color:var(--ac)}.er{color:var(--err);white-space:normal;min-width:240px}.wr{color:var(--warn);white-space:normal;min-width:200px}.d{color:var(--mut);white-space:normal;min-width:160px;font-size:12px}
 .tema{display:flex;justify-content:flex-end;gap:4px;margin-bottom:6px}.tema button{padding:5px 11px;font-size:12px}.tema button.on{background:var(--ac);color:var(--acx);border-color:var(--ac);font-weight:600}
@@ -54,7 +54,7 @@ button.p{background:#102f50;color:white;border-color:#102f50}
 <main>
 <div class="tophead">
   <img src="assets/logo-logica.webp" alt="Lógica assessoria contábil">
-  <div class="headcopy"><h1>Calculadora CBS e IBS</h1><p>Simule os impactos da Reforma Tributária de forma simples e rápida</p></div>
+  <div class="headcopy"><h1>Calculadora CBS</h1><p>Simule a CBS e os impactos da Reforma Tributária de forma simples e rápida</p></div>
   <div class="ratepill">Alíquota CBS: 11,3%</div>
 </div>
 <div class="tema" id="tema" role="group" aria-label="Tema"><button data-t="auto">Auto</button><button data-t="escuro">Escuro</button><button data-t="claro">Claro</button></div>
@@ -66,7 +66,12 @@ button.p{background:#102f50;color:white;border-color:#102f50}
     <span class="note">Tributação para todos os itens:</span>
     <input id="all" list="cl" placeholder="cClassTrib">
     <button id="apply">Aplicar</button>
-    <label class="c"><input type="checkbox" id="ded" checked onchange="render()"> Excluir ICMS, ISS, PIS e COFINS da base (LC 214/2025, art. 12, §2º, V — vale de 2026 a 2032)</label>
+    <label class="c"><input type="checkbox" id="ded" checked onchange="calc()"> Descontar ICMS, ISS, PIS e COFINS da base, quando aplicável (2026 a 2032)</label>
+  <div class="bar" id="taxRates"><span class="note">Quando a NFS-e não informar os valores dos tributos, estimar sobre o valor do serviço:</span>
+    <label class="c">PIS % <input id="pisRate" type="number" min="0" max="100" step="0.01" value="1.65" style="width:76px" onchange="calc()"></label>
+    <label class="c">COFINS % <input id="cofinsRate" type="number" min="0" max="100" step="0.01" value="7.60" style="width:76px" onchange="calc()"></label>
+    <label class="c">ISS % <input id="issRate" type="number" min="0" max="100" step="0.01" value="0" style="width:76px" onchange="calc()"></label>
+  </div>
   </div>
   <div class="bar"><button class="p" id="go" disabled>Recalcular</button><button id="csv" disabled>Baixar CSV</button><span class="note" id="msg"></span></div>
   <datalist id="cl"></datalist>
@@ -77,10 +82,10 @@ button.p{background:#102f50;color:white;border-color:#102f50}
 <ul class="note">
 <li><a href="https://www2.camara.leg.br/legin/fed/leicom/2025/leicomplementar-214-16-janeiro-2025-796905-normaatualizada-pl.docx">LC 214/2025, texto atualizado</a> e <a href="https://www2.camara.leg.br/legin/fed/leicom/2026/leicomplementar-227-13-janeiro-2026-798657-publicacaooriginal-177770-pl.html">LC 227/2026</a></li>
 
-<li><a href="https://consumo.tributos.gov.br">Portal do consumo (CBS/IBS)</a> · <a href="https://www.gov.br/receitafederal/pt-br/acesso-a-informacao/acoes-e-programas/programas-e-atividades/reforma-consumo/orientacoes-2026">Orientações 2026 da Receita</a></li>
+<li><a href="https://consumo.tributos.gov.br">Portal da Reforma Tributária do Consumo</a> · <a href="https://www.gov.br/receitafederal/pt-br/acesso-a-informacao/acoes-e-programas/programas-e-atividades/reforma-consumo/orientacoes-2026">Orientações 2026 da Receita Federal</a></li>
 <li><a href="https://www.gov.br/nfse/pt-br/biblioteca/documentacao-tecnica">Notas técnicas da NFS-e</a> · <a href="https://www.nfe.fazenda.gov.br/portal/listaConteudo.aspx?tipoConteudo=04BIflQt1aY=">Notas técnicas da NF-e</a></li>
-</ul><p class="note">A calculadora utiliza as tabelas de classificação mantidas nos arquivos locais do projeto.</p></details>
-<p class="note">Os XMLs são processados localmente no seu navegador; nenhum dado é enviado à API da Receita Federal. A simulação considera CBS nominal de 11,3%, aplicando o percentual de redução correspondente ao cClassTrib selecionado. A base considera frete, seguro e outras despesas, conforme os parâmetros de base já existentes no sistema. Resultado estimativo, não substitui orientação fiscal.</p>
+</ul><p class="note">A calculadora utiliza a tabela oficial de classificações tributárias para identificar os percentuais de redução da CBS.</p></details>
+<p class="note">Os XMLs são processados localmente no seu navegador; nenhum dado é enviado à API da Receita Federal. A simulação considera CBS nominal de 11,3%, aplicando o percentual de redução correspondente ao cClassTrib selecionado. Quando a NFS-e não informa os valores de PIS, COFINS ou ISS, a calculadora estima as deduções com os percentuais editáveis acima (padrão: PIS 1,65%, COFINS 7,60% e ISS 0%). A base também considera frete, seguro e outras despesas quando informados no XML. Resultado estimativo; confira o enquadramento e os parâmetros antes de utilizar fiscalmente.</p>
 <footer><img src="assets/logo-logica.webp" alt="Lógica assessoria contábil"><span>Conte com a Lógica para ir além!</span></footer>
 </main>
 <script>
@@ -97,6 +102,7 @@ let docs=[],CL={};
 const T=(e,t)=>e?.getElementsByTagNameNS("*",t)[0];
 const V=(e,t)=>T(e,t)?.textContent.trim()??"";
 const N=(e,t)=>parseFloat(V(e,t))||0;
+const optionalN=(roots,names)=>{for(const root of roots){if(!root)continue;for(const name of names){const el=T(root,name);if(el)return Number.parseFloat(el.textContent)||0;}}return null;};
 
 function parse(xml,name){
   const d=new DOMParser().parseFromString(xml,"application/xml");
@@ -133,15 +139,17 @@ function parse(xml,name){
     const vServ=N(grupoServ,"vServ")||N(grupoValores,"vServ");
     const cst=V(gTrib,"CST")||V(ibscbs,"CST")||"000";
     const cc=V(gTrib,"cClassTrib")||V(ibscbs,"cClassTrib")||"000001";
-    const impDps=N(dps,"vISSQN")+N(dps,"vPis")+N(dps,"vPIS")+N(dps,"vCofins");
-    const impNfse=N(nfs,"vISSQN")+N(nfs,"vPis")+N(nfs,"vPIS")+N(nfs,"vCofins");
+    const roots=[dps,nfs,grupoValores];
+    const tribMun=T(grupoValores,"tribMun")||T(dps,"tribMun")||T(nfs,"tribMun");
+    const tribFed=T(grupoValores,"tribFed")||T(dps,"tribFed")||T(nfs,"tribFed");
+    const iss=optionalN([tribMun,...roots],["vISSQN","vISS"]);
+    const pis=optionalN([tribFed,...roots],["vPis","vPIS"]);
+    const cofins=optionalN([tribFed,...roots],["vCofins","vCOFINS"]);
     return{...base,tp:91,nf:numero,uf:UFS[String(mun).slice(0,2)],mun,
       dh:data.includes("T")?data:data+"T12:00:00-03:00",
       itens:[{n:1,cod:(V(dps,"cNBS")||V(nfs,"cNBS")).replace(/\D/g,""),
         desc:V(dps,"xDescServ")||V(nfs,"xDescServ"),qtd:1,un:"UN",
-        bruto:vServ||N(grupoServ,"vServPrest"),
-        imp:impDps||impNfse,
-        cst,cc}]};
+        bruto:vServ||N(grupoServ,"vServPrest"), imp:0, deducoes:{iss,pis,cofins}, cst,cc}]};
   }
   throw new Error("tipo de documento ainda não suportado (BP-e, NF3e, NFCom…)");
 }
@@ -158,10 +166,10 @@ $("drop").onclick=()=>$("file").click();$("file").onchange=e=>{load(e.target.fil
 $("drop").ondragover=e=>{e.preventDefault();$("drop").classList.add("on")};
 $("drop").ondragleave=()=>$("drop").classList.remove("on");
 $("drop").ondrop=e=>{e.preventDefault();$("drop").classList.remove("on");load(e.dataTransfer.files)};
-$("apply").onclick=()=>{const c=$("all").value.trim();if(!c)return;docs.forEach(d=>d.itens.forEach(i=>setCC(i,c)));render()};
+$("apply").onclick=()=>{const c=$("all").value.trim();if(!c)return;docs.forEach(d=>d.itens.forEach(i=>setCC(i,c)));calc()};
 
 function setCC(i,c){i.cc=c;if(CL[c]?.cst)i.cst=CL[c].cst}
-window.chg=(a,b,k,v)=>{const i=docs[a].itens[b];k==="cc"?setCC(i,v.trim()):i.cst=v.trim();render()};
+window.chg=(a,b,k,v)=>{const i=docs[a].itens[b];k==="cc"?setCC(i,v.trim()):i.cst=v.trim();calc()};
 
 // Carrega localmente as classificações e percentuais de redução preservados na pasta data.
 const carregarTabelas=(async()=>{
@@ -179,15 +187,24 @@ const carregarTabelas=(async()=>{
     classificacoes.forEach(x=>{
       const codigo=String(x.codigo);
       CL[codigo]={cst:cstPorCodigo[codigo]||"",d:x.descricao||"",redCBS:Number(x.percentualReducaoCbs)||0,
-        redIBSUF:Number(x.percentualReducaoIbsUf)||0,redIBSMun:Number(x.percentualReducaoIbsMun)||0};
+        };
     });
     $("cl").innerHTML=Object.entries(CL).map(([k,v])=>`<option value="${k}">${esc(k+" — "+v.d)}</option>`).join("");
     $("upd").textContent=" · classificações locais carregadas";
   }catch(e){$("msg").textContent="Não foi possível carregar as tabelas locais de classificação: "+e.message}
 })();
-// LC 214/2025, art. 12: valor da operação (frete, seguro, taxas e outras despesas entram); não entram IPI, IBS/CBS e descontos incondicionais;
-// ICMS, ISS, PIS e Cofins saem da base de 2026 a 2032 (§2º, V); o Imposto Seletivo integra a base.
-function baseOf(d,i){const y=+String(d.dh).slice(0,4);return Math.max(i.bruto-(i.ipi||0)+(i.is||0)-($("ded").checked&&y<=2032?i.imp:0),0)}
+// Base de cálculo estimada: valor do serviço/operação, com as deduções selecionadas para o período de 2026 a 2032.
+function deductionsOf(d,i){
+  const y=+String(d.dh).slice(0,4);
+  if(!$("ded").checked||y<2026||y>2032)return 0;
+  if(d.tp===91){
+    const rates={iss:Number($("issRate").value)||0,pis:Number($("pisRate").value)||0,cofins:Number($("cofinsRate").value)||0};
+    const values=i.deducoes||{};
+    return ["iss","pis","cofins"].reduce((sum,k)=>sum+(values[k]===null||values[k]===undefined?i.bruto*rates[k]/100:values[k]),0);
+  }
+  return i.imp||0;
+}
+function baseOf(d,i){return Math.max(i.bruto-(i.ipi||0)+(i.is||0)-deductionsOf(d,i),0)}
 // ---- Histórico salvo no próprio navegador (IndexedDB); nada é enviado a servidor ----
 const DB=new Promise(res=>{try{const r=indexedDB.open("calc-cbs-ibs",1);r.onupgradeneeded=()=>r.result.createObjectStore("calculos",{keyPath:"id",autoIncrement:true});r.onsuccess=()=>res(r.result);r.onerror=()=>res(null)}catch{res(null)}});
 async function hStore(mode,fn){const db=await DB;if(!db)return;return new Promise(ok=>{try{const t=db.transaction("calculos",mode),q=fn(t.objectStore("calculos"));t.oncomplete=()=>ok(q?.result);t.onerror=()=>ok()}catch{ok()}})}
@@ -197,7 +214,7 @@ async function renderHist(){
   if(!l.length){h.hidden=true;return}
   h.hidden=false;
   h.innerHTML=`<details><summary><b>Histórico neste navegador</b> <span class="note">· ${l.length} nota(s) · só você vê, nada vai para servidor</span></summary>
-  <div class="tw"><table><thead><tr><th>Data</th><th>Tipo</th><th>Nº</th><th>Arquivo</th><th class="n">CBS</th><th>Problemas</th><th></th></tr></thead><tbody>`+
+  <div class="tw"><table><thead><tr><th>Data</th><th>Tipo</th><th>Nº</th><th>Arquivo</th><th class="n">CBS</th><th>Alertas</th><th></th></tr></thead><tbody>`+
   l.sort((x,y)=>y.em-x.em).map(r=>{const c=r.itens.reduce((s,i)=>s+(i.cbs||0),0),p=r.itens.filter(i=>i.erros?.length).length;
     return`<tr><td>${new Date(r.em).toLocaleString("pt-BR")}</td><td>${TIPO[r.tp]?.[0]||""}</td><td>${esc(r.nf)}</td><td>${esc(r.name)}</td><td class="n">${brl(c)}</td><td>${p||"–"}</td><td><button onclick="hAbrir(${r.id})">Abrir</button> <button onclick="hDel(${r.id})">Excluir</button></td></tr>`}).join("")+
   `</tbody></table></div><div class="bar"><button onclick="hLimpa()">Apagar todo o histórico</button></div></details>`;
@@ -218,7 +235,7 @@ async function calc(){
       i.red=reducao;
       i.aliqCBS=ALIQUOTA_CBS*(1-reducao/100);
       i.cbs=+(baseOf(d,i)*i.aliqCBS/100).toFixed(2);
-      i.ibs=0;i.aliqIBSUF=0;i.aliqIBSMun=0;
+      
       if(!c.codigo && !CL[i.cc]) i.alertas.push({detail:"cClassTrib não localizado na tabela local; confira a classificação selecionada."});
     });
   }
@@ -237,22 +254,22 @@ function render(){
     const rows=d.itens.map((i,b)=>{
       const st=i.erros?.length?`<td class="er">✗ ${i.erros.map(e=>esc((e.code?e.code+" · ":"")+(e.detail||e.title))).join("<br>")}</td>`:
         i.alertas?.length?`<td class="wr">⚠ ${i.alertas.map(e=>esc(e.detail||e.title)).join("<br>")}</td>`:
-        i.cbs!==undefined?`<td class="ok">✓ Válido</td>`:"<td></td>";
-      return`<tr><td>${i.n}</td><td title="${esc(i.desc)}">${esc(i.cod)||"–"}</td><td class="n">${brl(baseOf(d,i))}</td>
+        i.cbs!==undefined?`<td class="ok">✓ Calculado</td>`:"<td></td>";
+      return`<tr><td>${i.n}</td><td title="${esc(i.desc)}">${esc(i.cod)||"–"}</td><td class="n">${brl(i.bruto)}</td><td class="n">${brl(deductionsOf(d,i))}</td><td class="n">${brl(baseOf(d,i))}</td>
       <td><input value="${esc(i.cst)}" style="width:50px" onchange="chg(${a},${b},'cst',this.value)"></td>
       <td><input value="${esc(i.cc)}" list="cl" onchange="chg(${a},${b},'cc',this.value)"></td><td class="d">${esc(CL[i.cc]?.d)}</td>
       <td class="n">${pct(i.aliqCBS)}</td><td class="n">${i.cbs!==undefined?brl(i.cbs):"–"}</td><td>${i.red!==undefined?esc(i.red)+"%":"–"}</td>${st}</tr>`}).join("");
     return`<div class="card"><b>${TIPO[d.tp][0]} ${esc(d.nf)}</b><span class="tag">${esc(d.uf)} · mun. ${d.mun}</span><span class="note"> ${esc(d.name)}</span>
      ${d.err?`<p class="er">${esc(d.err)}</p>`:""}${d.geral?.length?`<p class="er">${d.geral.map(e=>esc(e.detail||e.title)).join("<br>")}</p>`:""}
-     <div class="tw"><table><thead><tr><th>Item</th><th>${d.tp===91?"NBS":"NCM"}</th><th class="n">Base</th><th>CST</th><th>cClassTrib</th><th>Tributação</th><th class="n">Alíquota CBS</th><th class="n">Valor CBS</th><th>Redução</th><th>Validação</th></tr></thead><tbody>${rows}</tbody></table></div>
+     <div class="tw"><table><thead><tr><th>Item</th><th>${d.tp===91?"NBS":"NCM"}</th><th class="n">Valor bruto</th><th class="n">Deduções</th><th class="n">Base CBS</th><th>CST</th><th>cClassTrib</th><th>Tributação</th><th class="n">Alíquota CBS</th><th class="n">Valor CBS</th><th>Redução</th><th>Validação</th></tr></thead><tbody>${rows}</tbody></table></div>
      
      </div>`}).join("");
 }
 
 $("csv").onclick=()=>{
-  const l=[["Tipo","Numero","Item","NCM/NBS","Base","CST","cClassTrib","Aliquota CBS (%)","Reducao CBS (%)","Valor CBS","Status"]];
-  docs.forEach(d=>d.itens.forEach(i=>l.push([TIPO[d.tp][0],d.nf,i.n,i.cod,baseOf(d,i).toFixed(2),i.cst,i.cc,i.aliqCBS??"",i.red??"",(i.cbs||0).toFixed(2),(i.alertas||[]).map(e=>e.detail).join(" | ")||"Calculado localmente"])));
-  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\ufeff"+l.map(r=>r.join(";")).join("\n")],{type:"text/csv"}));a.download="cbs-ibs.csv";a.click();
+  const l=[["Tipo","Numero","Item","NCM/NBS","Valor bruto","Deduções","Base CBS","CST","cClassTrib","Aliquota CBS (%)","Reducao CBS (%)","Valor CBS","Status"]];
+  docs.forEach(d=>d.itens.forEach(i=>l.push([TIPO[d.tp][0],d.nf,i.n,i.cod,i.bruto.toFixed(2),deductionsOf(d,i).toFixed(2),baseOf(d,i).toFixed(2),i.cst,i.cc,i.aliqCBS??"",i.red??"",(i.cbs||0).toFixed(2),(i.alertas||[]).map(e=>e.detail).join(" | ")||"Calculado localmente"])));
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\ufeff"+l.map(r=>r.join(";")).join("\n")],{type:"text/csv"}));a.download="calculadora-cbs.csv";a.click();
 };
 renderHist();
 function setTema(t){const r=document.documentElement;t==="auto"?r.removeAttribute("data-tema"):r.dataset.tema=t;try{localStorage.setItem("tema",t)}catch{}document.querySelectorAll("#tema button").forEach(b=>b.classList.toggle("on",b.dataset.t===t))}
