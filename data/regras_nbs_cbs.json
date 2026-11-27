@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-11-25",
+  "source": "Receita Federal - API de Dados Abertos do Piloto RTC; LC 214/2025 e alterações.",
+  "validationEndpoint": "/calculadora/dados-abertos/classificacoes-tributarias/nbs-aplicavel",
+  "rules": []
+}

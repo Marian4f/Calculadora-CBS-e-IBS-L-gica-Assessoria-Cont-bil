@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-11-26",
+  "sources": [
+    {
+      "name": "Receita Federal - Dados Abertos RTC",
+      "url": "https://piloto-cbs.tributos.gov.br/servico/calculadora-consumo/api"
+    },
+    {
+      "name": "Portal Nacional da NF-e - Tabela cClassTrib",
+      "url": "https://www.nfe.fazenda.gov.br/portal/listaConteudo.aspx?tipoConteudo=%2FNJarYc9nus%3D"
+    },
+    {
+      "name": "LC 214/2025 compilada",
+      "url": "https://www.planalto.gov.br/ccivil_03/leis/lcp/lcp214compilado.htm"
+    },
+    {
+      "name": "Receita Federal - Legislação RTC",
+      "url": "https://www.gov.br/receitafederal/pt-br/acesso-a-informacao/acoes-e-programas/reforma-tributaria-do-consumo/legislacao"
+    }
+  ],
+  "note": "CNAE não determina sozinho o benefício. Matrizes NCM/NBS e CNAE sem regra explícita permanecem como análise necessária."
+}
