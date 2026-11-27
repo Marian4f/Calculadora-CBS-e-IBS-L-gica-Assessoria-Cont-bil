@@ -37,3 +37,41 @@ test("fórmula CBS preserva alíquota nominal e aplica apenas uma redução", ()
   // Uma segunda redução não é adicionada nem composta automaticamente.
   assert.ok(Math.abs(nominal * (1 - reduction / 100) - 4.52) < 1e-9);
 });
+
+
+test("correlação por código de serviço NFS-e permanece informativa até publicação operacional", async () => {
+  const table = await data("regras_servico_nfs_cbs");
+  assert.equal(table.operational, false);
+  assert.equal(table.status, "EM_DESENVOLVIMENTO");
+  assert.deepEqual(table.rules, []);
+  assert.match(table.sourceUrl, /^https:\/\/www\.gov\.br\/nfse\//);
+});
+
+
+test("NFS-e exige captura separada de cTribNac, cTribMun, cNBS e cIndOp", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const source = await readFile(new URL("../index.html", import.meta.url), "utf8");
+  for (const field of ["cTribNac", "cTribMun", "cNBS", "cIndOp", "xTribNac", "xNBS"]) {
+    assert.ok(source.includes(field), `campo ${field} não tratado no importador`);
+  }
+  assert.match(source, /operationCode.*digits\(i\.operationCode\)/s);
+  assert.match(source, /divergência descritiva é um alerta para conferência/s);
+});
+
+test("tabela de correlação NFS-e não autoriza redução sem status operacional", async () => {
+  const table = await data("regras_servico_nfs_cbs");
+  assert.equal(table.operational, false);
+  assert.equal(table.status, "EM_DESENVOLVIMENTO");
+  assert.equal(table.rules.length, 0);
+});
+
+
+test("caso de regressão da NFS-e captura os códigos do XML sem confundi-los", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const xml = await readFile(new URL("./fixtures/nfse-servico-regressao.xml", import.meta.url), "utf8");
+  for (const [tag, expected] of [["cTribNac","071901"],["cTribMun","001"],["cNBS","101011100"],["cIndOp","020101"],["CST","000"],["cClassTrib","000001"]]) {
+    assert.match(xml, new RegExp(`<${tag}>${expected}</${tag}>`));
+  }
+  assert.match(xml, /<xTribNac>/);
+  assert.match(xml, /<xNBS>/);
+});
