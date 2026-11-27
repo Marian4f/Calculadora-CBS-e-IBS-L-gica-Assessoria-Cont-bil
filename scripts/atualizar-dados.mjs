@@ -1,14 +1,15 @@
 // Atualiza tabelas públicas da Receita Federal/RTC com validação e gravação atômica por arquivo.
 // Não altera as matrizes de enquadramento CNAE/NCM/NBS: elas exigem curadoria normativa.
 import { mkdir, readFile, writeFile, rename } from "node:fs/promises";
+import { construirVinculos, pareceRegressao } from "./lib/vinculos.mjs";
 
 const BASE = process.env.RTC_API || "https://piloto-cbs.tributos.gov.br/servico/calculadora-consumo/api";
 const data = new Date().toISOString().slice(0, 10);
-const get = async path => {
+const get = async (path, { permitirVazio = false } = {}) => {
   const response = await fetch(`${BASE}${path}`, { headers: { accept: "application/json" } });
   if (!response.ok) throw new Error(`Falha ao consultar ${path}: HTTP ${response.status}`);
   const value = await response.json();
-  if (value == null || (Array.isArray(value) && value.length === 0))
+  if (value == null || (!permitirVazio && Array.isArray(value) && value.length === 0))
     throw new Error(`Resposta vazia/inválida em ${path}; arquivos locais preservados.`);
   return value;
 };
@@ -28,9 +29,9 @@ const [situacoes, classificacoes] = await Promise.all([
   get(`/calculadora/dados-abertos/situacoes-tributarias/cbs-ibs?data=${data}`),
   get(`/calculadora/dados-abertos/classificacoes-tributarias/cbs-ibs?data=${data}`)
 ]);
-validateArray(situacoes, "situações tributárias", x => x && /^\\d{3}$/.test(String(x.codigo)) && Array.isArray(x.classificacoesTributarias));
+validateArray(situacoes, "situações tributárias", x => x && /^\d{3}$/.test(String(x.codigo)) && Array.isArray(x.classificacoesTributarias));
 validateArray(classificacoes, "classificações tributárias", x =>
-  x && /^\\d{6}$/.test(String(x.codigo)) && Number.isFinite(Number(x.percentualReducaoCbs)) &&
+  x && /^\d{6}$/.test(String(x.codigo)) && Number.isFinite(Number(x.percentualReducaoCbs)) &&
   Number(x.percentualReducaoCbs) >= 0 && Number(x.percentualReducaoCbs) <= 100);
 
 const current = JSON.parse(await readFile("data/meta_validacao.json", "utf8"));
@@ -43,3 +44,17 @@ await atomicWrite("situacoes_tributarias_cbs_ibs", situacoes);
 await atomicWrite("classificacoes_tributarias_cbs_ibs", classificacoes);
 await atomicWrite("meta_validacao", nextMeta);
 console.log(`Tabelas oficiais CBS atualizadas: ${situacoes.length} CSTs e ${classificacoes.length} cClassTrib.`);
+
+// Vínculos oficiais NBS -> cClassTrib (base da validação por código de serviço). Falha aqui não derruba as demais tabelas.
+try {
+  const nbs = JSON.parse(await readFile("data/nbs_lista.json", "utf8"));
+  const vinculos = await construirVinculos({ get, classificacoes, totalNbsVigentes: nbs.length, data });
+  let anterior = null;
+  try { anterior = JSON.parse(await readFile("data/vinculos_nbs_cclasstrib.json", "utf8")); } catch {}
+  if (pareceRegressao(anterior, vinculos)) throw new Error("Novo arquivo de vínculos é muito menor que o anterior; preservado o anterior.");
+  await atomicWrite("vinculos_nbs_cclasstrib", vinculos);
+  console.log(`Vínculos NBS -> cClassTrib atualizados: ${Object.keys(vinculos.classificacoes).length} classificações.`);
+} catch (e) {
+  // ::warning:: vira anotação visível no GitHub Actions sem impedir a publicação das demais tabelas.
+  console.warn(`::warning::Vínculos NBS -> cClassTrib não atualizados: ${e.message}`);
+}
