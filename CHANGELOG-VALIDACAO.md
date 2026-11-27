@@ -32,3 +32,14 @@
 - `index.html`: painel "Identificação automática da empresa"; CNAEs principal e secundários vêm do cadastro; campo manual só aparece se a consulta falhar; cruzamentos informativos (serviço × NBS, CNAE × operação, item da LC 116, tipo de operação pelo CFOP); CSV com dados cadastrais.
 - Correção: expressões regulares com barra dupla (`/\\D/`, `/\\d/`) faziam `digits()` não remover nada e o atualizador diário rejeitar todos os códigos (as tabelas nunca eram atualizadas).
 - `tests/fixtures/nfse-servico-regressao.xml` ganhou o CNPJ do emitente e o valor do serviço; novos testes unitários e de ponta a ponta.
+
+
+## 26/11/2026 — SEAD: validação oficial e recálculo automático (XML deixa de ser fonte da verdade)
+- Novo `js/motor-fiscal.js`: CST, cClassTrib e redução do XML são apenas declarações a conferir. A classificação é resolvida pela base oficial (vínculos NBS → cClassTrib; NCM → cClassTrib via `ncm-aplicavel`) e por regras curadas com fonte/vigência. Redução oficial aplicada automaticamente (CBS, IBS UF e IBS Mun) quando há uma única classificação oficial; ambiguidade ou ausência de base = NECESSITA ANÁLISE, sem redução.
+- Novo status `RECALCULADO` (o XML foi contrariado pela base oficial) e relatório de divergências por item (XML × apurado), com valores de CBS/IBS do XML × recalculados, alternativas não aplicadas e retenções.
+- Retenções: ISSQN e PIS/COFINS declarados são conferidos aritmeticamente; retenção de CBS/IBS só com regra cadastrada em `data/regras_retencao_cbs.json`; redutor de compra governamental oficial é aplicado quando o tomador é órgão público.
+- `scripts/atualizar-dados.mjs` + `scripts/lib/vinculos.mjs`: geram `data/vinculos_nbs_cclasstrib.json` a partir de `/dados-abertos/nbs-aplicaveis`, com gravação atômica, proteção contra regressão e aviso (não falha) se a API estiver fora.
+- Worker: rota `/rtc/ncm-aplicavel` (proxy somente leitura, validado, com cache e limite por IP).
+- NFS-e: extração dos valores declarados no bloco IBSCBS do emissor nacional, tpRetISSQN, tpRetPisCofins e tipo do tomador (PF/PJ).
+- Testes: `tests/motor-fiscal.test.mjs` (NFS-e de referência, CST integral, NCM, CNAE, retenções, atualizador e Worker) e `tests/e2e/referencia.py`.
+- ATENÇÃO: `data/vinculos_nbs_cclasstrib.json` é distribuído como marcador `NAO_SINCRONIZADO`. Rode o workflow "Atualizar tabelas da Receita" (ou `node scripts/atualizar-dados.mjs` com internet) antes de entregar a clientes; até lá nenhuma redução é aplicada.

@@ -91,11 +91,12 @@ button.p{background:#102f50;color:white;border-color:#102f50}
 
 <li><a href="https://www.nfe.fazenda.gov.br/portal/listaConteudo.aspx?tipoConteudo=%2FNJarYc9nus%3D">Portal NF-e — tabela cClassTrib vigente</a> · <a href="https://consumo.tributos.gov.br">Portal da Reforma Tributária do Consumo</a> · <a href="https://www.gov.br/receitafederal/pt-br/acesso-a-informacao/acoes-e-programas/programas-e-atividades/reforma-consumo/orientacoes-2026">Orientações 2026 da Receita Federal</a></li>
 <li><a href="https://www.gov.br/nfse/pt-br/biblioteca/documentacao-tecnica">Notas técnicas da NFS-e</a> · <a href="https://www.nfe.fazenda.gov.br/portal/listaConteudo.aspx?tipoConteudo=04BIflQt1aY=">Notas técnicas da NF-e</a></li>
-</ul><p class="note">As tabelas oficiais CST/cClassTrib identificam códigos e percentuais associados. Elas, isoladamente, não comprovam o direito ao benefício para cada NCM/NBS, CNAE e operação. A validação só retorna VÁLIDO quando houver regra local expressa e vigente; sem matriz oficial suficiente, o sistema sinaliza NECESSITA ANÁLISE e não aplica redução não confirmada. As regras CNAE/NCM/NBS são atualizáveis por JSON em data/.</p></details>
-<p class="note">Os XMLs são processados localmente no seu navegador; apenas o número do CNPJ do emitente é consultado em fonte cadastral externa (Worker próprio e/ou BrasilAPI), com cache de 7 dias neste navegador. A simulação considera CBS nominal de 11,3%. A redução vinculada ao cClassTrib é tratada como candidata e só é aplicada quando a validação independente confirma regra expressa para a operação; na ausência de matriz suficiente, calcula sem redução e sinaliza análise necessária. Quando a NFS-e não informa os valores de PIS, COFINS ou ISS, a calculadora estima as deduções com os percentuais editáveis acima (padrão: PIS 1,65%, COFINS 7,60% e ISS 0%). A base também considera frete, seguro e outras despesas quando informados no XML. Resultado estimativo; confira o enquadramento e os parâmetros antes de utilizar fiscalmente.</p>
+</ul><p class="note">As tabelas oficiais CST/cClassTrib identificam códigos e percentuais associados. Elas, isoladamente, não comprovam o direito ao benefício para cada NCM/NBS, CNAE e operação. O enquadramento é definido pelos vínculos oficiais NBS/NCM → cClassTrib da Receita Federal (sincronizados diariamente em data/) e, quando houver, por regras curadas com fonte e vigência em data/regras_*.json. Sem base oficial suficiente, o sistema sinaliza NECESSITA ANÁLISE e não aplica redução.</p></details>
+<p class="note">Os XMLs são processados localmente no seu navegador; apenas o número do CNPJ do emitente é consultado em fonte cadastral externa (Worker próprio e/ou BrasilAPI), com cache de 7 dias neste navegador. A simulação considera CBS nominal de 11,3%. O CST, o cClassTrib e a redução informados no XML não são tomados como verdadeiros: o enquadramento é conferido com as tabelas oficiais da Receita Federal (vínculos NBS/NCM → cClassTrib) e a redução oficial é aplicada no recálculo, com relatório das divergências em relação ao XML. Quando a base oficial não permite definir uma única classificação, nenhuma redução é aplicada e o item é sinalizado para análise. Quando a NFS-e não informa os valores de PIS, COFINS ou ISS, a calculadora estima as deduções com os percentuais editáveis acima (padrão: PIS 1,65%, COFINS 7,60% e ISS 0%). A base também considera frete, seguro e outras despesas quando informados no XML. Resultado estimativo; confira o enquadramento e os parâmetros antes de utilizar fiscalmente.</p>
 <footer><img src="assets/logo-logica.webp" alt="Lógica assessoria contábil"><span>Conte com a Lógica para ir além!</span></footer>
 </main>
 <script src="js/empresa.js"></script>
+<script src="js/motor-fiscal.js"></script>
 <script>
 // Cálculo local das tabelas fiscais; a única consulta externa é o cadastro do CNPJ do emitente.
 const ALIQUOTA_CBS=11.3;
@@ -105,13 +106,21 @@ const pct=n=>n===undefined||n===null||n===""?"–":(Number(n)||0).toLocaleString
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const UFS={11:"RO",12:"AC",13:"AM",14:"RR",15:"PA",16:"AP",17:"TO",21:"MA",22:"PI",23:"CE",24:"RN",25:"PB",26:"PE",27:"AL",28:"SE",29:"BA",31:"MG",32:"ES",33:"RJ",35:"SP",41:"PR",42:"SC",43:"RS",50:"MS",51:"MT",52:"GO",53:"DF"};
 const TIPO={55:["NF-e","nfe"],65:["NFC-e","nfce"],57:["CT-e","cte"],91:["NFS-e","nfse"]};
-let docs=[],CL={},CST={},NCM={},NBS={},CNAE_RULES=[],NCM_RULES=[],NBS_RULES=[],SERVICE_RULES=[],LEGAL={};
+let TAB=null,docs=[],CL={},CST={},NCM={},NBS={},CNAE_RULES=[],NCM_RULES=[],NBS_RULES=[],SERVICE_RULES=[],LEGAL={};
 
 const T=(e,t)=>e?.getElementsByTagNameNS("*",t)[0];
 const V=(e,t)=>T(e,t)?.textContent.trim()??"";
 const N=(e,t)=>parseFloat(V(e,t))||0;
 const optionalN=(roots,names)=>{for(const root of roots){if(!root)continue;for(const name of names){const el=T(root,name);if(el)return Number.parseFloat(el.textContent)||0;}}return null;};
 
+// Valores de IBS/CBS que o XML declarou (apenas para conferência; nunca são fonte da apuração).
+function declaradoNfe(g){
+  if(!g)return{};
+  const cbs=T(g,"gCBS"),uf=T(g,"gIBSUF"),mun=T(g,"gIBSMun");
+  return{vBCIbsCbs:optionalN([T(g,"gIBSCBS")],["vBC"]),pCBS:optionalN([cbs],["pCBS"]),vCBS:optionalN([cbs],["vCBS"]),pRedCBS:optionalN([T(cbs,"gRed")],["pRedAliq"]),
+    pIBSUF:optionalN([uf],["pIBSUF"]),vIBSUF:optionalN([uf],["vIBSUF"]),pRedIBSUF:optionalN([T(uf,"gRed")],["pRedAliq"]),
+    pIBSMun:optionalN([mun],["pIBSMun"]),vIBSMun:optionalN([mun],["vIBSMun"]),pRedIBSMun:optionalN([T(mun,"gRed")],["pRedAliq"])};
+}
 function parse(xml,name){
   const d=new DOMParser().parseFromString(xml,"application/xml");
   if(d.querySelector("parsererror"))throw new Error("XML inválido");
@@ -125,7 +134,8 @@ function parse(xml,name){
       return{n:+det.getAttribute("nItem"),cod:V(p,"NCM"),cfop:V(p,"CFOP"),desc:V(p,"xProd"),qtd:N(p,"qCom")||1,un:V(p,"uCom")||"UN",
         bruto:N(p,"vProd")+N(p,"vFrete")+N(p,"vSeg")+N(p,"vOutro")-N(p,"vDesc"),
         imp:N(T(imp,"ICMS"),"vICMS")+N(T(imp,"ICMS"),"vFCP")+N(T(imp,"PIS"),"vPIS")+N(T(imp,"COFINS"),"vCOFINS"),ipi:N(T(imp,"IPI"),"vIPI"),is:N(T(imp,"IS"),"vIS"),
-        cst:V(g,"CST"),cc:V(g,"cClassTrib")}});
+        cst:V(g,"CST"),cc:V(g,"cClassTrib"),
+        xml:declaradoNfe(g)}});
     return{...base,tp:mod,nf:V(ide,"nNF"),uf:V(T(nfe,"emit"),"UF"),mun:+V(ide,"cMunFG"),dh:V(ide,"dhEmi")||V(ide,"dEmi")+"T12:00:00-03:00",itens};
   }
   if(cte){
@@ -162,12 +172,18 @@ function parse(xml,name){
     const iss=optionalN([tribMun,...roots],["vISSQN","vISS"]);
     const pis=optionalN([tribFed,...roots],["vPis","vPIS"]);
     const cofins=optionalN([tribFed,...roots],["vCofins","vCOFINS"]);
-    return{...base,tp:91,nf:numero,uf:UFS[String(mun).slice(0,2)],mun,
+    // Bloco IBSCBS calculado pelo emissor nacional (infNFSe/IBSCBS) e tributos municipais/federais declarados.
+    const ibsOut=T(nfs,"IBSCBS"),vOut=T(nfs,"valores"),toma=T(dps,"toma"),temOut=ibsOut&&ibsOut!==ibscbs;
+    const decl={tpRetISSQN:optionalN([tribMun],["tpRetISSQN"]),vISSQN:iss,pAliqAplic:optionalN([vOut],["pAliqAplic"]),vBCIss:temOut?optionalN([vOut],["vBC"]):null,
+      tpRetPisCofins:optionalN([tribFed],["tpRetPisCofins"]),vBCPisCofins:optionalN([tribFed],["vBCPisCofins"]),pAliqPis:optionalN([tribFed],["pAliqPis"]),pAliqCofins:optionalN([tribFed],["pAliqCofins"]),vPis:pis,vCofins:cofins};
+    if(temOut)Object.assign(decl,{vBCIbsCbs:optionalN([T(ibsOut,"valores")],["vBC"]),pCBS:optionalN([T(ibsOut,"fed")],["pCBS"]),vCBS:optionalN([T(ibsOut,"gCBS")],["vCBS"]),
+      pIBSUF:optionalN([T(ibsOut,"uf")],["pIBSUF"]),vIBSUF:optionalN([T(ibsOut,"gIBSUFTot")],["vIBSUF"]),pIBSMun:optionalN([T(ibsOut,"mun")],["pIBSMun"]),vIBSMun:optionalN([T(ibsOut,"gIBSMunTot")],["vIBSMun"])});
+    return{...base,tp:91,nf:numero,uf:UFS[String(mun).slice(0,2)],mun,tomadorTipo:V(toma,"CNPJ")?"PJ":V(toma,"CPF")?"PF":"",
       dh:data.includes("T")?data:data+"T12:00:00-03:00",
       itens:[{n:1,cod:(V(cServ,"cNBS")||V(dps,"cNBS")||V(nfs,"cNBS")).replace(/\D/g,""),
         serviceCode,municipalServiceCode,operationCode,nationalServiceDescription,nbsDescription,
         desc:V(dps,"xDescServ")||V(nfs,"xDescServ"),qtd:1,un:"UN",
-        bruto:vServ||N(grupoServ,"vServPrest"), imp:0, deducoes:{iss,pis,cofins}, cst,cc}]};
+        bruto:vServ||N(grupoServ,"vServPrest"), imp:0, deducoes:{iss,pis,cofins}, cst,cc,xml:decl}]};
   }
   throw new Error("tipo de documento ainda não suportado (BP-e, NF3e, NFCom…)");
 }
@@ -192,9 +208,10 @@ window.chg=(a,b,k,v)=>{const i=docs[a].itens[b];k==="cc"?setCC(i,v.trim()):i.cst
 // Carrega localmente as classificações e percentuais de redução preservados na pasta data.
 const carregarTabelas=(async()=>{
  try{
- const names=["situacoes_tributarias_cbs_ibs.json","classificacoes_tributarias_cbs_ibs.json","ncm_vigentes.json","nbs_lista.json","regras_cnae_cbs.json","regras_ncm_cbs.json","regras_nbs_cbs.json","regras_servico_nfs_cbs.json","fundamentacoes_legais.json","meta_validacao.json","meta.json"];
+ const names=["situacoes_tributarias_cbs_ibs.json","classificacoes_tributarias_cbs_ibs.json","ncm_vigentes.json","nbs_lista.json","regras_cnae_cbs.json","regras_ncm_cbs.json","regras_nbs_cbs.json","regras_servico_nfs_cbs.json","fundamentacoes_legais.json","meta_validacao.json","meta.json","vinculos_nbs_cclasstrib.json","regras_retencao_cbs.json","redutores_compra_governamental.json"];
  const v=await Promise.all(names.map(f=>fetch("data/"+f).then(r=>{if(!r.ok)throw Error(f+" HTTP "+r.status);return r.json()})));
- const [grupos,classes,ncm,nbs,cr,nr,sr,service,legal,meta,metaOrigem]=v;
+ const [grupos,classes,ncm,nbs,cr,nr,sr,service,legal,meta,metaOrigem,vinculos,retencao,redutores]=v;
+ TAB=MotorFiscal.criarTabelas({classificacoes:classes,situacoes:grupos,vinculos,regras:{cnae:cr.rules||[],ncm:nr.rules||[],nbs:sr.rules||[],servico:service.rules||[],retencao:retencao.rules||[]},legal,redutoresGov:redutores});
  grupos.forEach(g=>{const cst=String(g.codigo).padStart(3,"0");CST[cst]=g.descricao||"";g.classificacoesTributarias.forEach(x=>{if(CL[x.codigo])CL[x.codigo].cst=cst})});
  classes.forEach(x=>{CL[x.codigo]={codigo:x.codigo,cst:"",d:x.descricao||"",redCBS:Number(x.percentualReducaoCbs)||0,nomenclatura:x.nomenclatura||"",dataAtualizacao:x.dataAtualizacao||""}});
  grupos.forEach(g=>g.classificacoesTributarias.forEach(x=>{if(CL[x.codigo])CL[x.codigo].cst=String(g.codigo).padStart(3,"0")}));
@@ -278,7 +295,7 @@ async function renderHist(){
   h.hidden=false;
   h.innerHTML=`<details><summary><b>Histórico neste navegador</b> <span class="note">· ${l.length} nota(s) · só você vê, nada vai para servidor</span></summary>
   <div class="tw"><table><thead><tr><th>Data</th><th>Tipo</th><th>Nº</th><th>Arquivo</th><th class="n">CBS</th><th>Alertas</th><th></th></tr></thead><tbody>`+
-  l.sort((x,y)=>y.em-x.em).map(r=>{const c=r.itens.reduce((s,i)=>s+(i.cbs||0),0),p=r.itens.filter(i=>i.erros?.length||["INCOMPATÍVEL","NÃO IDENTIFICADO","NECESSITA ANÁLISE"].includes(i.validacao?.status)).length;
+  l.sort((x,y)=>y.em-x.em).map(r=>{const c=r.itens.reduce((s,i)=>s+(i.cbs||0),0),p=r.itens.filter(i=>i.erros?.length||["INCOMPATÍVEL","NÃO IDENTIFICADO","NECESSITA ANÁLISE","RECALCULADO"].includes(i.validacao?.status)).length;
     return`<tr><td>${new Date(r.em).toLocaleString("pt-BR")}</td><td>${TIPO[r.tp]?.[0]||""}</td><td>${esc(r.nf)}</td><td>${esc(r.name)}</td><td class="n">${brl(c)}</td><td>${p||"–"}</td><td><button onclick="hAbrir(${r.id})">Abrir</button> <button onclick="hDel(${r.id})">Excluir</button></td></tr>`}).join("")+
   `</tbody></table></div><div class="bar"><button onclick="hLimpa()">Apagar todo o histórico</button></div></details>`;
 }
@@ -286,66 +303,59 @@ window.hAbrir=async id=>{const r=await hStore("readonly",s=>s.get(id));if(!r)ret
 window.hDel=async id=>{await hStore("readwrite",s=>s.delete(id));renderHist()};
 window.hLimpa=async()=>{if(confirm("Apagar todo o histórico deste navegador?")){await hStore("readwrite",s=>s.clear());renderHist()}};
 
+// Validação oficial de NCM (ncm-aplicavel) via Worker; resultado em cache local por 7 dias.
+async function ncmValidosPara(ncm,data,dfe){
+  if(!CFG_EMP.workerUrl)return null;
+  const classes=MotorFiscal.classesParaConsultaNcm(TAB,dfe),chave="ncm:"+ncm+":"+data+":"+dfe;
+  try{const c=JSON.parse(localStorage.getItem(chave)||"null");if(c&&Date.now()-c.t<7*864e5&&classes.every(k=>k in c.v))return c.v}catch{}
+  const out={},fila=[...classes],base=CFG_EMP.workerUrl.replace(/\/$/,"");
+  await Promise.all(Array.from({length:5},async()=>{while(fila.length){const k=fila.shift();
+    try{const r=await fetch(base+"/rtc/ncm-aplicavel?cClassTrib="+k+"&ncm="+ncm+"&data="+data);if(r.ok){const o=await r.json();if(typeof o.valido==="boolean")out[k]=o.valido}}catch{}}}));
+  if(classes.every(k=>k in out))try{localStorage.setItem(chave,JSON.stringify({t:Date.now(),v:out}))}catch{}
+  return out;
+}
 async function calc(){
-  await carregarTabelas;
+  await carregarTabelas;await cfgEmpresa;
   $("go").disabled=true;
   await identificarEmpresas();
-  $("msg").textContent="Calculando localmente…";
+  $("msg").textContent="Validando com a base oficial e recalculando…";
   for(const d of docs){
     d.err=null;d.geral=[];
-    d.itens.forEach(i=>{
+    for(const i of d.itens){
       i.erros=[];i.alertas=[];
-      const c=CL[i.cc]||{};
-      const reducao=Number(c.redCBS)||0;
-      i.red=0;i.aliqCBS=ALIQUOTA_CBS;
-      const cod=digits(i.cod),date=String(d.dh||"").slice(0,10),serv=d.tp===91,cat=serv?NBS:NCM;
-      const codeExists=!!(cod&&cat[cod]),cstExists=!!(i.cst&&CST[i.cst]),ccExists=!!(i.cc&&CL[i.cc]);
-      const pairOk=ccExists&&cstExists&&CL[i.cc].cst===i.cst,emp=EMPRESAS[digits(d.cnpj)],empSt=empresaStatus[digits(d.cnpj)],cnaeList=emp?.dados?[emp.dados.cnaePrincipal,...(emp.dados.cnaesSecundarios||[])].filter(Boolean):[],cnaeCodes=cnaeList.map(x=>digits(x.codigo)),cnae=cnaeCodes[0]||"";
-      const rules=serv?NBS_RULES:NCM_RULES;
-      const active=r=>((!r.from||date>=r.from)&&(!r.to||date<=r.to));
+      const serv=d.tp===91,cat=serv?NBS:NCM,cod=digits(i.cod),date=String(d.dh||"").slice(0,10),dfe=TIPO[d.tp]?.[0]||"NF-e";
+      const emp=EMPRESAS[digits(d.cnpj)],empSt=empresaStatus[digits(d.cnpj)];
+      const cnaeList=emp?.dados?[emp.dados.cnaePrincipal,...(emp.dados.cnaesSecundarios||[])].filter(Boolean):[],cnaeCodes=cnaeList.map(x=>digits(x.codigo)),cnae=cnaeCodes[0]||"";
       const serviceCode=digits(i.serviceCode||"");
-      const serviceCandidates=serv&&serviceCode?SERVICE_RULES.filter(r=>digits(r.serviceCode)===serviceCode&&(!r.nbs||digits(r.nbs)===cod)&&(!r.cClassTrib||r.cClassTrib===i.cc)&&(!r.operationCode||digits(r.operationCode)===digits(i.operationCode))&&active(r)):[];
-      const serviceCorrelation=serviceCandidates[0]||null;
-      const ncmMatch=rules.find(r=>r.code===cod&&active(r)&&(!r.cClassTrib||r.cClassTrib===i.cc));
-      const cnaeMatch=CNAE_RULES.find(r=>(r.cnaes||[]).map(digits).some(c=>cnaeCodes.includes(c))&&active(r)&&(!r.codes||r.codes.includes(cod)));
-      const candidates=[ncmMatch,cnaeMatch].filter(Boolean);
-      const conflicting=candidates.length>1&&new Set(candidates.map(r=>String(r.reduction))).size>1;
-      const match=ncmMatch||cnaeMatch;
-      let status="NECESSITA ANÁLISE",reasons=[];
-      if(!ccExists)reasons.push("cClassTrib ausente ou não localizado na tabela oficial.");
-      if(!cstExists)reasons.push("CST ausente ou não localizado na tabela oficial.");
-      if(ccExists&&cstExists&&!pairOk)reasons.push("Combinação CST + cClassTrib incompatível.");
-      if(!cod)reasons.push((serv?"NBS":"NCM")+" não informado.");else if(!codeExists)reasons.push((serv?"NBS":"NCM")+" não localizado no catálogo.");
+      const ncmV=!serv&&cod&&cat[cod]?await ncmValidosPara(cod,date,dfe):null;
+      // O XML é apenas entrada bruta: CST, cClassTrib e redução declarados são conferidos, nunca adotados.
+      const r=MotorFiscal.avaliarItem({tipo:serv?"servico":"produto",codigo:cod,serviceCode,operationCode:digits(i.operationCode),dfe,data:date,base:baseOf(d,i),
+        declarado:{cst:i.cst,cc:i.cc},xml:i.xml||{},tomadorTipo:d.tomadorTipo},TAB,{aliquotaCbs:ALIQUOTA_CBS,cnaes:cnaeCodes,ncmValidos:ncmV,catalogoOk:cod?!!cat[cod]:undefined});
+      let status=r.status;const reasons=[...r.motivos];
       if(!cnae)reasons.push("CNAE não obtido: "+(empSt?.motivos?.[0]||"o cadastro do emitente não foi consultado")+" Nenhum CNAE foi presumido.");
-      if(ccExists&&cstExists&&!pairOk)status="INCOMPATÍVEL";
-      else if((i.cc&&!ccExists)||(i.cst&&!cstExists)||(cod&&!codeExists))status="NÃO IDENTIFICADO";
-      else if(conflicting)reasons.push("Foram encontradas regras concorrentes com percentuais distintos; necessária análise manual, sem acumular reduções.");
-      else if(ccExists&&cstExists&&pairOk&&codeExists&&match&&(!match.requiresCnae||(cnae&&cnaeMatch)))status="VÁLIDO";
-      else {
-        if(serv&&!serviceCode)reasons.push("Código de tributação nacional do serviço (cTribNac) não localizado no XML; informe-o para permitir a consulta da correlação de serviço.");
-        else if(serv&&!serviceCorrelation){
-          const descServ=i.nationalServiceDescription||"descrição nacional não disponível";
-          const descNbs=i.nbsDescription||NBS[cod]||"descrição NBS não disponível";
-          reasons.push("Código nacional cTribNac "+serviceCode+" e NBS "+(cod||"não informado")+" foram extraídos separadamente. Serviço declarado: "+descServ+". Descrição NBS: "+descNbs+". A compatibilidade serviço + NBS + cIndOp + CST + cClassTrib não pode ser confirmada porque não há matriz oficial operacional carregada. A divergência descritiva é um alerta para conferência, não uma conclusão automática de incompatibilidade. O Anexo VIII do Portal NFS-e está em desenvolvimento e não possui regras de negócio em produção; necessária análise manual.");
-        }
-        reasons.push("Não existe matriz oficial completa para confirmar o enquadramento NCM/NBS + CNAE + operação + vigência. A redução associada ao cClassTrib não confirma, isoladamente, o direito ao benefício.");
-      }
       // Cruzamentos informativos: indícios para conferência, nunca prova de enquadramento nem de incompatibilidade.
       const descNbs=i.nbsDescription||NBS[cod]||"";
       const cruz=Empresa.cruzarCnaes(cnaeList,serv?[i.nationalServiceDescription,descNbs].filter(Boolean).join(" "):i.desc);
       const dsn=serv?Empresa.divergenciaServicoNbs(i.nationalServiceDescription,descNbs):null;
       const lc116=serv?Empresa.itemLc116(serviceCode):null;
-      if(dsn?.divergente)reasons.push("Divergência descritiva entre o serviço (cTribNac "+serviceCode+") e a NBS "+cod+": as descrições têm pouca correspondência textual. Indício para conferência manual, não prova de incompatibilidade.");
+      if(dsn?.divergente)reasons.push("Divergência descritiva entre o serviço (cTribNac "+serviceCode+") e a NBS "+cod+": as descrições têm pouca correspondência textual. A divergência descritiva é um alerta para conferência, não uma conclusão automática de incompatibilidade.");
       if(cruz.nivel==="BAIXO")reasons.push("Aderência textual baixa entre os CNAEs do emitente e a operação descrita. Indício apenas: CNAE não determina benefício.");
       (empSt?.avisos||[]).forEach(a=>reasons.push(a));
-      if(empSt?.status==="INCOMPATÍVEL"){reasons.push(...empSt.motivos);if(status==="VÁLIDO")status="NECESSITA ANÁLISE"}
-      const reduction=match?.reduction??reducao;
-      const appliedReduction=status==="VÁLIDO"?reduction:0;
-      i.red=appliedReduction;i.aliqCBS=ALIQUOTA_CBS*(1-appliedReduction/100);
-      i.validacao={status,reasons,cnae:cnae||"Não informado",cnaesConsiderados:cnaeList,aderenciaCnae:cruz,divergenciaServicoNbs:dsn,itemLc116:lc116,tipoOperacao:Empresa.tipoOperacaoCfop(i.cfop),nomenclature:serv?"NBS":"NCM",descricao:cat[cod]||"",codigoServico:serviceCode||"",codigoMunicipal:i.municipalServiceCode||"",codigoOperacao:i.operationCode||"",descricaoServico:i.nationalServiceDescription||"",descricaoNBS:i.nbsDescription||"",correlacaoServico:!!serviceCorrelation,reducao:status==="VÁLIDO"?reduction:null,reducaoCandidata:reducao,nominal:ALIQUOTA_CBS,efetiva:i.aliqCBS,fundamento:match?.legal||LEGAL[i.cc]?.textoCurto||"LC 214/2025 — hipótese específica não confirmada",fonte:match?.source||"Receita Federal/RTC — tabelas oficiais locais",atualizacao:match?.updatedAt||c.dataAtualizacao||"Não informada"};
-      if(status!=="VÁLIDO")i.alertas.push({detail:status+": "+reasons.join(" ")+" CBS calculada sem redução não confirmada."});
+      let aplicada=r.aplicada;
+      if(empSt?.status==="INCOMPATÍVEL"){reasons.push(...empSt.motivos);if(["VÁLIDO","RECALCULADO"].includes(status)){status="NECESSITA ANÁLISE";aplicada=false}}
+      const red=aplicada?r.oficial.reducaoCbs:0;
+      i.red=red;i.aliqCBS=ALIQUOTA_CBS*(1-red/100);
       i.cbs=+(baseOf(d,i)*i.aliqCBS/100).toFixed(2);
-    });
+      const c=CL[i.cc]||{};
+      i.diagnostico={...r,status,aplicada};
+      i.validacao={status,reasons,cnae:cnae||"Não informado",cnaesConsiderados:cnaeList,aderenciaCnae:cruz,divergenciaServicoNbs:dsn,itemLc116:lc116,tipoOperacao:Empresa.tipoOperacaoCfop(i.cfop),
+        nomenclature:serv?"NBS":"NCM",descricao:cat[cod]||"",codigoServico:serviceCode||"",codigoMunicipal:i.municipalServiceCode||"",codigoOperacao:digits(i.operationCode)||"",
+        descricaoServico:i.nationalServiceDescription||"",descricaoNBS:i.nbsDescription||"",correlacaoServico:!!r.oficial,
+        reducao:aplicada?red:null,reducaoCandidata:r.oficial?r.oficial.reducaoCbs:(c.redCBS??null),nominal:ALIQUOTA_CBS,efetiva:i.aliqCBS,
+        fundamento:r.oficial?.fundamento||LEGAL[i.cc]?.textoCurto||"LC 214/2025 — hipótese específica não confirmada",
+        fonte:r.oficial?.fonte||"Receita Federal/RTC — tabelas oficiais locais",atualizacao:r.oficial?.origem||c.dataAtualizacao||"Não informada"};
+      if(status!=="VÁLIDO")i.alertas.push({detail:status+": "+reasons.join(" ")+(aplicada?"":" CBS calculada sem redução não confirmada.")});
+    }
   }
   for(const d of docs)await hSave(d);
   $("msg").textContent="";$("go").disabled=false;$("csv").disabled=false;render();renderHist();
@@ -361,10 +371,22 @@ function linhaCruzamentos(i){
   if(v.divergenciaServicoNbs&&v.divergenciaServicoNbs.nivel!=="SEM_DADOS")p.push("Serviço × NBS: "+(v.divergenciaServicoNbs.divergente?"DIVERGÊNCIA DESCRITIVA":"descrições compatíveis")+" (indício)");
   return esc(p.join(" · "));
 }
+function blocoDiagnostico(i){
+  const g=i.diagnostico;if(!g)return"";
+  const o=g.oficial,rc=g.recalculo,rt=g.retencoes,doc=rc?.documento,v=x=>x===null||x===undefined||x===""?"–":esc(typeof x==="number"?x.toLocaleString("pt-BR",{maximumFractionDigits:4}):x);
+  const linhas=(g.divergencias||[]).map(x=>`<tr><td>${esc(x.campo)}</td><td>${v(x.xml)}</td><td><b>${v(x.oficial)}</b></td><td class="${x.gravidade==="ALTA"?"er":"wr"}">${esc(x.gravidade)}</td><td>${esc(x.detalhe||"")}</td></tr>`).join("");
+  const cls=o?`<p class="note"><b>Resultado recalculado (base oficial):</b> cClassTrib ${esc(o.codigo)} — ${esc(o.descricao)} · CST ${esc(o.cst)} · redução CBS ${pct(o.reducaoCbs)} · IBS UF ${pct(o.reducaoIbsUf)} · IBS Mun ${pct(o.reducaoIbsMun)}<br>Origem: ${esc(o.origem)} · Fundamento: ${esc(o.fundamento)}</p>`
+    :`<p class="note wr"><b>Classificação oficial não determinada.</b> Nenhuma redução foi aplicada.</p>`;
+  const valores=doc?`<p class="note">Com a alíquota do próprio documento — CBS: XML ${v(doc.cbsXml)} → recalculada <b>${v(doc.cbs)}</b>${doc.ibsUf!=null?` · IBS UF: XML ${v(doc.ibsUfXml)} → recalculado <b>${v(doc.ibsUf)}</b>`:""}${doc.ibsMun!=null?` · IBS Mun: XML ${v(doc.ibsMunXml)} → recalculado <b>${v(doc.ibsMun)}</b>`:""}</p>`:"";
+  const alt=(g.alternativas||[]).length?`<details><summary>Outras classificações possíveis, não aplicadas (dependem de requisito não constante do XML)</summary><p class="note">${g.alternativas.map(a=>esc(a.codigo+" — "+a.descricao+" ("+a.reducaoCbs+"%)")).join("<br>")}</p></details>`:"";
+  const ret=rt?`<p class="note"><b>Retenções:</b> ISSQN ${esc(rt.iss?.declarado||"não informado")} · PIS/COFINS ${esc(rt.pisCofins?.declarado||"não informado")} · CBS/IBS: ${rt.cbsIbs.aplicada?`retenção aplicada (${esc(rt.cbsIbs.regra)}): CBS ${brl(rt.cbsIbs.cbs)}, IBS ${brl(rt.cbsIbs.ibs)}`:esc(rt.cbsIbs.motivo)}${(rt.alertas||[]).map(a=>"<br>⚠ "+esc(a)).join("")}</p>`:"";
+  return`<details open><summary>Relatório de divergências — item ${i.n}: ${(g.divergencias||[]).length?(g.divergencias.length+" divergência(s) entre o XML e a apuração oficial"):"sem divergências"}</summary>${cls}
+   ${linhas?`<div class="tw"><table><thead><tr><th>Campo</th><th>No XML</th><th>Apurado (oficial)</th><th>Gravidade</th><th>Detalhe</th></tr></thead><tbody>${linhas}</tbody></table></div>`:""}${valores}${alt}${ret}</details>`;
+}
 function render(){
   renderEmpresas();
   const all=docs.flatMap(d=>d.itens),calcd=all.some(i=>i.cbs!==undefined);
-  const S=(f)=>all.reduce((s,i)=>s+(f(i)||0),0),bad=all.filter(i=>i.erros?.length||["INCOMPATÍVEL","NÃO IDENTIFICADO","NECESSITA ANÁLISE"].includes(i.validacao?.status)).length;
+  const S=(f)=>all.reduce((s,i)=>s+(f(i)||0),0),bad=all.filter(i=>i.erros?.length||["INCOMPATÍVEL","NÃO IDENTIFICADO","NECESSITA ANÁLISE","RECALCULADO"].includes(i.validacao?.status)).length;
   $("sum").innerHTML=docs.length?`<div class="res"><div class="k"><span>Documentos</span><b>${docs.length}</b></div><div class="k"><span>Itens</span><b>${all.length}</b></div>
    <div class="k"><span>Itens com problema</span><b style="color:${bad?"var(--err)":"var(--ac)"}">${calcd?bad:"–"}</b></div>
    <div class="k"><span>CBS</span><b>${brl(S(i=>i.cbs))}</b></div></div>`:"";
@@ -379,14 +401,14 @@ function render(){
     return`<div class="card"><b>${TIPO[d.tp][0]} ${esc(d.nf)}</b><span class="tag">${esc(d.uf)} · mun. ${d.mun}</span><span class="note"> ${esc(d.name)}</span>
      ${d.err?`<p class="er">${esc(d.err)}</p>`:""}${d.geral?.length?`<p class="er">${d.geral.map(e=>esc(e.detail||e.title)).join("<br>")}</p>`:""}
      <div class="tw"><table><thead><tr><th>Item</th><th>${d.tp===91?"NBS":"NCM"}</th>${d.tp===91?"<th>Cód. serviço</th><th>cIndOp</th>":""}<th>CFOP</th><th class="n">Valor bruto</th><th class="n">Deduções</th><th class="n">Base CBS</th><th>CST</th><th>cClassTrib</th><th>Tributação</th><th class="n">Alíquota CBS</th><th class="n">Valor CBS</th><th>Redução</th><th>Validação</th></tr></thead><tbody>${rows}</tbody></table></div>
-     ${d.itens.map(i=>i.validacao?`<details><summary>Validação fiscal — item ${i.n}: ${esc(i.validacao.status)}</summary><p class="note">CNAE: ${esc(i.validacao.cnae)} · ${i.validacao.nomenclature}: ${esc(i.cod||"não informado")} — ${esc(i.validacao.descricao)}${d.tp===91?" · Código de serviço cTribNac: "+esc(i.serviceCode||"não informado")+" · Código municipal: "+esc(i.municipalServiceCode||"não informado")+" · cIndOp: "+esc(i.operationCode||"não informado"):""}</p>${d.tp===91?`<p class="note">Descrição do serviço nacional: ${esc(i.nationalServiceDescription||"não informada")} · Descrição NBS: ${esc(i.nbsDescription||NBS[i.cod]||"não informada")}</p>`:""}<p class="note">${linhaCruzamentos(i)}</p><p class="note">Redução confirmada: ${i.validacao.reducao===null?"não confirmada":pct(i.validacao.reducao)} · Redução candidata do cClassTrib: ${pct(i.validacao.reducaoCandidata)} · CBS nominal: ${pct(i.validacao.nominal)} · CBS efetiva aplicada: ${pct(i.validacao.efetiva)}</p><p class="note">Fundamentação: ${esc(i.validacao.fundamento)} · Fonte: ${esc(i.validacao.fonte)} · Atualização: ${esc(i.validacao.atualizacao)}</p><p class="wr">${(i.validacao.reasons||[]).map(esc).join(" ")}</p></details>`:"").join("")}
+     ${d.itens.map(i=>i.validacao?blocoDiagnostico(i)+`<details><summary>Validação fiscal — item ${i.n}: ${esc(i.validacao.status)}</summary><p class="note">CNAE: ${esc(i.validacao.cnae)} · ${i.validacao.nomenclature}: ${esc(i.cod||"não informado")} — ${esc(i.validacao.descricao)}${d.tp===91?" · Código de serviço cTribNac: "+esc(i.serviceCode||"não informado")+" · Código municipal: "+esc(i.municipalServiceCode||"não informado")+" · cIndOp: "+esc(i.operationCode||"não informado"):""}</p>${d.tp===91?`<p class="note">Descrição do serviço nacional: ${esc(i.nationalServiceDescription||"não informada")} · Descrição NBS: ${esc(i.nbsDescription||NBS[i.cod]||"não informada")}</p>`:""}<p class="note">${linhaCruzamentos(i)}</p><p class="note">Redução confirmada: ${i.validacao.reducao===null?"não confirmada":pct(i.validacao.reducao)} · Redução candidata do cClassTrib: ${pct(i.validacao.reducaoCandidata)} · CBS nominal: ${pct(i.validacao.nominal)} · CBS efetiva aplicada: ${pct(i.validacao.efetiva)}</p><p class="note">Fundamentação: ${esc(i.validacao.fundamento)} · Fonte: ${esc(i.validacao.fonte)} · Atualização: ${esc(i.validacao.atualizacao)}</p><p class="wr">${(i.validacao.reasons||[]).map(esc).join(" ")}</p></details>`:"").join("")}
      
      </div>`}).join("");
 }
 
 $("csv").onclick=()=>{
-  const l=[["Tipo","Numero","Item","NCM/NBS","Codigo servico cTribNac","Codigo municipal cTribMun","cIndOp","Valor bruto","Deduções","Base CBS","CST","cClassTrib","Aliquota CBS (%)","Reducao CBS (%)","Valor CBS","Status","CNAE analisado","Fundamentação","Fonte","CNPJ emitente","Razão social","Situação cadastral","CNAE principal","Fonte cadastral","Consulta cadastral em","Aderência CNAE x operação","Serviço x NBS"]];
-  docs.forEach(d=>d.itens.forEach(i=>l.push([TIPO[d.tp][0],d.nf,i.n,i.cod,i.serviceCode||"",i.municipalServiceCode||"",i.operationCode||"",i.bruto.toFixed(2),deductionsOf(d,i).toFixed(2),baseOf(d,i).toFixed(2),i.cst,i.cc,i.aliqCBS??"",i.red??"",(i.cbs||0).toFixed(2),i.validacao?.status||"NECESSITA ANÁLISE",i.validacao?.cnae||"",i.validacao?.fundamento||"",i.validacao?.fonte||"",Empresa.formatarCnpj(d.cnpj),d.empresa?.dados?.razaoSocial||"",d.empresa?.dados?.situacao||"",d.empresa?.dados?.cnaePrincipal?Empresa.formatarCnae(d.empresa.dados.cnaePrincipal.codigo):"",d.empresa?.fonte||"",d.empresa?.consultadoEm||"",i.validacao?.aderenciaCnae?.nivel||"",i.validacao?.divergenciaServicoNbs?.nivel||""].map(x=>String(x).replace(/;/g,",")))));
+  const l=[["Tipo","Numero","Item","NCM/NBS","Codigo servico cTribNac","Codigo municipal cTribMun","cIndOp","Valor bruto","Deduções","Base CBS","CST","cClassTrib","Aliquota CBS (%)","Reducao CBS (%)","Valor CBS","Status","CNAE analisado","Fundamentação","Fonte","CNPJ emitente","Razão social","Situação cadastral","CNAE principal","Fonte cadastral","Consulta cadastral em","Aderência CNAE x operação","Serviço x NBS","cClassTrib oficial","Redução oficial CBS (%)","CBS no XML","CBS recalculada (alíquota do documento)","Divergências"]];
+  docs.forEach(d=>d.itens.forEach(i=>l.push([TIPO[d.tp][0],d.nf,i.n,i.cod,i.serviceCode||"",i.municipalServiceCode||"",i.operationCode||"",i.bruto.toFixed(2),deductionsOf(d,i).toFixed(2),baseOf(d,i).toFixed(2),i.cst,i.cc,i.aliqCBS??"",i.red??"",(i.cbs||0).toFixed(2),i.validacao?.status||"NECESSITA ANÁLISE",i.validacao?.cnae||"",i.validacao?.fundamento||"",i.validacao?.fonte||"",Empresa.formatarCnpj(d.cnpj),d.empresa?.dados?.razaoSocial||"",d.empresa?.dados?.situacao||"",d.empresa?.dados?.cnaePrincipal?Empresa.formatarCnae(d.empresa.dados.cnaePrincipal.codigo):"",d.empresa?.fonte||"",d.empresa?.consultadoEm||"",i.validacao?.aderenciaCnae?.nivel||"",i.validacao?.divergenciaServicoNbs?.nivel||"",i.diagnostico?.oficial?.codigo||"",i.diagnostico?.oficial?.reducaoCbs??"",i.diagnostico?.recalculo?.documento?.cbsXml??"",i.diagnostico?.recalculo?.documento?.cbs??"",(i.diagnostico?.divergencias||[]).map(x=>x.campo+": XML "+x.xml+" → oficial "+x.oficial).join(" | ")].map(x=>String(x).replace(/;/g,",")))));
   const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\ufeff"+l.map(r=>r.join(";")).join("\n")],{type:"text/csv"}));a.download="calculadora-cbs.csv";a.click();
 };
 renderHist();
