@@ -24,3 +24,11 @@
 - A tela passa a exibir `cIndOp` e as descrições nacionais do serviço e do NBS no detalhamento fiscal.
 - A exportação CSV inclui `cIndOp`.
 - Na ausência de matriz operacional oficial, a calculadora apresenta a divergência descritiva como alerta para conferência, sem declarar incompatibilidade automaticamente e sem aplicar redução.
+
+
+## 26/11/2026 — Identificação automática da empresa por CNPJ
+- Novo `js/empresa.js`: validação de CNPJ, consulta cadastral com cache de 7 dias, tentativas, espaçamento, unificação de consultas e registro das fontes; status VÁLIDO / INCOMPATÍVEL / NÃO IDENTIFICADO / NECESSITA ANÁLISE.
+- Novo `cloudflare-worker/` (worker.js e wrangler.toml): proxy com cache, reserva, limite por IP, CORS restrito e provedores em cadeia (BrasilAPI e CNPJ.ws).
+- `index.html`: painel "Identificação automática da empresa"; CNAEs principal e secundários vêm do cadastro; campo manual só aparece se a consulta falhar; cruzamentos informativos (serviço × NBS, CNAE × operação, item da LC 116, tipo de operação pelo CFOP); CSV com dados cadastrais.
+- Correção: expressões regulares com barra dupla (`/\\D/`, `/\\d/`) faziam `digits()` não remover nada e o atualizador diário rejeitar todos os códigos (as tabelas nunca eram atualizadas).
+- `tests/fixtures/nfse-servico-regressao.xml` ganhou o CNPJ do emitente e o valor do serviço; novos testes unitários e de ponta a ponta.
