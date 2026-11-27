@@ -75,3 +75,13 @@ test("caso de regressão da NFS-e captura os códigos do XML sem confundi-los", 
   assert.match(xml, /<xTribNac>/);
   assert.match(xml, /<xNBS>/);
 });
+
+
+test("regressão: expressões regulares não podem ter barra dupla (digits() e atualizador quebravam)", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
+  const upd = await readFile(new URL("../scripts/atualizar-dados.mjs", import.meta.url), "utf8");
+  assert.doesNotMatch(html, /\/\\\\[dDsS]/, "index.html contém regex com \\\\ literal");
+  assert.doesNotMatch(upd, /\/\^\\\\d/, "atualizar-dados.mjs contém regex com \\\\ literal");
+  assert.ok(/^\d{3}$/.test("000") && /^\d{6}$/.test("000001"));
+});
