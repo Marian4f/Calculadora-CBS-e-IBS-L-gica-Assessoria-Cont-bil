@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root xmlns="urn:teste">
+ <infNFSe><xTribNac>Acompanhamento e fiscalização da execução de obras de engenharia, arquitetura e urbanismo.</xTribNac><xNBS>Serviços de construção de edificações residenciais de um e dois pavimentos</xNBS>
+ <DPS><infDPS><serv><cServ><cTribNac>071901</cTribNac><cTribMun>001</cTribMun><cNBS>101011100</cNBS></cServ></serv>
+ <IBSCBS><cIndOp>020101</cIndOp><valores><trib><gIBSCBS><CST>000</CST><cClassTrib>000001</cClassTrib></gIBSCBS></trib></valores></IBSCBS></infDPS></DPS>
+ </infNFSe>
+</root>
