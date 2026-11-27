@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "status": "NAO_SINCRONIZADO",
+  "dataReferencia": null,
+  "geradoEm": null,
+  "fonte": "Receita Federal — API de dados abertos do Piloto RTC (/dados-abertos/nbs-aplicaveis). Gerado por scripts/atualizar-dados.mjs; este arquivo é um marcador até a primeira sincronização.",
+  "totalNbsVigentes": 0,
+  "classificacoes": {}
+}

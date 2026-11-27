@@ -1,0 +1,6 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": null,
+  "source": "Sem regra oficial de retenção de CBS/IBS carregada. Cada regra exige id, vigência (from/to), condições (tomadorTipo, nbs, cTribNac, cClassTrib), cbs/ibs (boolean), percentual, fonte e fundamento.",
+  "rules": []
+}
