@@ -1,0 +1,14 @@
+name = "calculadora-cbs-cnpj"
+main = "worker.js"
+compatibility_date = "2025-01-01"
+
+[vars]
+# Origem do site (somente esquema + domínio, sem caminho). Ajuste se o endereço for outro.
+ALLOWED_ORIGIN = "https://marian4f.github.io"
+RATE_LIMIT_PER_MIN = "30"
+
+# Opcional: reserva de 7 dias e limite por IP compartilhado entre instâncias.
+# 1) npx wrangler kv namespace create CNPJ_KV   2) descomente e cole o id retornado
+# [[kv_namespaces]]
+# binding = "CNPJ_KV"
+# id = "COLE_O_ID_AQUI"
