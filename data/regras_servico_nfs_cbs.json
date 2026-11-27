@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "updatedAt": "2026-11-26",
+  "source": "Portal Nacional da NFS-e — RTC — Anexo VIII, versão 1.02.00 (26/10/2026)",
+  "sourceUrl": "https://www.gov.br/nfse/pt-br/biblioteca/documentacao-tecnica/rtc/rtc",
+  "operational": false,
+  "status": "EM_DESENVOLVIMENTO",
+  "note": "O Portal Nacional da NFS-e declara expressamente que o Anexo VIII é trabalho inicial em desenvolvimento e que não há regras de negócio baseadas nele em produção. Os dados desta tabela são apenas candidatos informativos; não autorizam validar CST/cClassTrib nem aplicar redução. O esquema de regras suporta também operationCode (cIndOp); correlações devem informar código nacional do serviço, NBS, indicador de operação e, quando aplicável, CST/cClassTrib, vigência, fonte e fundamento.",
+  "rules": []
+}
