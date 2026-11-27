@@ -127,6 +127,29 @@ async function buscarNaFonte(prov, cnpj, ff) {
   return { falha: "indisponível" };
 }
 
+// Proxy somente-leitura (lista fechada de parâmetros) do endpoint oficial ncm-aplicavel do Piloto RTC.
+const RTC_BASE_PADRAO = "https://piloto-cbs.tributos.gov.br/servico/calculadora-consumo/api";
+async function rtcNcmAplicavel(url, request, env, ctx, deps, c) {
+  const cc = url.searchParams.get("cClassTrib") || "", ncm = url.searchParams.get("ncm") || "", data = url.searchParams.get("data") || "";
+  if (!/^\d{6}$/.test(cc) || !/^\d{8}$/.test(ncm) || !/^\d{4}-\d{2}-\d{2}$/.test(data))
+    return erro(400, "PARAMETROS_INVALIDOS", "Informe cClassTrib (6 dígitos), ncm (8 dígitos) e data (AAAA-MM-DD).", c);
+  if (await excedeLimite(request, env)) return erro(429, "LIMITE_EXCEDIDO", "Muitas consultas; tente novamente em instantes.", { ...c, "Retry-After": "60" });
+  const ff = deps.fetch || fetch, cache = deps.cache || (typeof caches !== "undefined" ? caches.default : null);
+  const chave = new Request(`https://rtc-cache.interno/ncm/${cc}/${ncm}/${data}`);
+  const hit = cache ? await cache.match(chave) : null;
+  if (hit) return json(await hit.json(), 200, { ...c, "X-Cache": "HIT" });
+  const base = (env.RTC_BASE || RTC_BASE_PADRAO).replace(/\/$/, "");
+  try {
+    const r = await ff(`${base}/calculadora/dados-abertos/classificacoes-tributarias/ncm-aplicavel?cClassTrib=${cc}&ncm=${ncm}&dataOcorrenciaFatoGerador=${data}`, { headers: { accept: "application/json" } });
+    if (!r.ok) return erro(r.status === 404 ? 404 : 503, "RTC_INDISPONIVEL", "Consulta à base oficial falhou (HTTP " + r.status + ").", c);
+    const o = await r.json();
+    if (typeof o?.valido !== "boolean") return erro(503, "RTC_RESPOSTA_INVALIDA", "Resposta inesperada da base oficial.", c);
+    const corpo = { schema: "rtc-ncm/v1", cClassTrib: cc, ncm, data, valido: o.valido, fonte: "Receita Federal — Piloto RTC (ncm-aplicavel)", consultadoEm: new Date((deps.agora || Date.now)()).toISOString() };
+    if (cache) ctx.waitUntil(cache.put(chave, new Response(JSON.stringify(corpo), { headers: { "Content-Type": "application/json", "Cache-Control": `public, max-age=${TTL_FRESCO_S}` } })));
+    return json(corpo, 200, { ...c, "X-Cache": "MISS" });
+  } catch (e) { return erro(503, "RTC_INDISPONIVEL", "Base oficial indisponível agora.", c); }
+}
+
 export default {
   async fetch(request, env = {}, ctx = { waitUntil() {} }, deps = {}) {
     const ff = deps.fetch || fetch, agora = deps.agora || (() => Date.now());
@@ -137,8 +160,9 @@ export default {
     if (request.method !== "GET") return erro(405, "METODO_NAO_PERMITIDO", "Use GET.", c);
     if (url.pathname === "/health")
       return json({ ok: true, origemConfigurada: origensPermitidas(env).length > 0, kv: !!env.CNPJ_KV, provedores: PROVEDORES.map(p => p.nome) }, 200, c);
+    if (url.pathname === "/rtc/ncm-aplicavel") return rtcNcmAplicavel(url, request, env, ctx, deps, c);
     const m = url.pathname.match(/^\/cnpj\/(\d{14})$/);
-    if (!m) return erro(404, "ROTA_INEXISTENTE", "Use /cnpj/{14 dígitos}.", c);
+    if (!m) return erro(404, "ROTA_INEXISTENTE", "Use /cnpj/{14 dígitos} ou /rtc/ncm-aplicavel.", c);
     const cnpj = m[1];
     if (!validarCnpj(cnpj)) return erro(400, "CNPJ_INVALIDO", "CNPJ inválido (dígitos verificadores não conferem).", c);
     if (await excedeLimite(request, env)) return erro(429, "LIMITE_EXCEDIDO", "Muitas consultas; tente novamente em instantes.", { ...c, "Retry-After": "60" });
