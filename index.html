@@ -30,7 +30,7 @@ button.p{background:var(--ac);color:var(--acx);border-color:var(--ac);font-weigh
 th,td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}th{color:var(--mut);font-weight:500}.n{text-align:right}
 input[type=text],input[type=number],input:not([type]){padding:5px 7px;background:var(--bg);color:var(--tx);border:1px solid var(--line);border-radius:6px;font:inherit;width:90px}
 .tag{display:inline-block;padding:1px 8px;border-radius:99px;background:#8a97ab26;font-size:12px;margin-left:6px}
-.ok{color:var(--ac)}.er{color:var(--err);white-space:normal;min-width:240px}.wr{color:var(--warn);white-space:normal;min-width:200px}.d{color:var(--mut);white-space:normal;min-width:160px;font-size:12px}
+.ok{color:#16834a}.status{font-weight:700}.er{color:var(--err);white-space:normal;min-width:240px}.wr{color:var(--warn);white-space:normal;min-width:200px}.d{color:var(--mut);white-space:normal;min-width:160px;font-size:12px}
 .tema{display:flex;justify-content:flex-end;gap:4px;margin-bottom:6px}.tema button{padding:5px 11px;font-size:12px}.tema button.on{background:var(--ac);color:var(--acx);border-color:var(--ac);font-weight:600}
 .note{color:var(--mut);font-size:12px}label.c{display:flex;gap:6px;align-items:center;color:var(--mut)}
 details{margin-top:10px}pre{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px;overflow:auto;max-height:240px;font-size:12px}
@@ -58,7 +58,7 @@ button.p{background:#102f50;color:white;border-color:#102f50}
   <div class="ratepill">Alíquota CBS: 11,3%</div>
 </div>
 <div class="tema" id="tema" role="group" aria-label="Tema"><button data-t="auto">Auto</button><button data-t="escuro">Escuro</button><button data-t="claro">Claro</button></div>
-<p class="sub">1. Envie os XMLs · 2. Confira as classificações tributárias · 3. Calcule a CBS com as reduções aplicáveis.</p>
+<p class="sub">1. Envie os XMLs · 2. Informe os CNAEs · 3. Confira a validação independente e calcule exclusivamente a CBS.</p>
 
 <div class="card">
   <div id="drop"><b>Arraste os XMLs aqui ou clique para escolher</b>NF-e, NFC-e, NFS-e (padrão nacional) e CT-e. Pode enviar vários de uma vez.<input id="file" type="file" accept=".xml,text/xml" multiple hidden></div>
@@ -77,15 +77,15 @@ button.p{background:#102f50;color:white;border-color:#102f50}
   <datalist id="cl"></datalist>
 </div>
 
-<div class="card" id="hist" hidden></div><div id="sum"></div><div id="out"></div>
+<div class="card" id="company"><b>Dados cadastrais para validação</b><p class="note">Informe o CNAE principal e secundários. O XML não é fonte cadastral definitiva; sem consulta cadastral oficial, os CNAEs informados são declarações do usuário.</p><div class="bar"><label class="c">CNPJ <input id="cnpj" type="text" placeholder="CNPJ" style="width:170px"></label><label class="c">CNAE principal <input id="cnaePrincipal" type="text" placeholder="7 dígitos" style="width:100px"></label><label class="c">CNAEs secundários <input id="cnaesSec" type="text" placeholder="separados por vírgula" style="width:220px"></label><button id="applyCompany">Aplicar aos documentos</button></div><p class="note" id="companyStatus">CNAE não informado.</p></div><div class="card" id="hist" hidden></div><div id="sum"></div><div id="out"></div>
 <details class="card"><summary><b>Fontes oficiais e atualização</b><span class="note" id="upd"></span></summary>
 <ul class="note">
 <li><a href="https://www2.camara.leg.br/legin/fed/leicom/2025/leicomplementar-214-16-janeiro-2025-796905-normaatualizada-pl.docx">LC 214/2025, texto atualizado</a> e <a href="https://www2.camara.leg.br/legin/fed/leicom/2026/leicomplementar-227-13-janeiro-2026-798657-publicacaooriginal-177770-pl.html">LC 227/2026</a></li>
 
-<li><a href="https://consumo.tributos.gov.br">Portal da Reforma Tributária do Consumo</a> · <a href="https://www.gov.br/receitafederal/pt-br/acesso-a-informacao/acoes-e-programas/programas-e-atividades/reforma-consumo/orientacoes-2026">Orientações 2026 da Receita Federal</a></li>
+<li><a href="https://www.nfe.fazenda.gov.br/portal/listaConteudo.aspx?tipoConteudo=%2FNJarYc9nus%3D">Portal NF-e — tabela cClassTrib vigente</a> · <a href="https://consumo.tributos.gov.br">Portal da Reforma Tributária do Consumo</a> · <a href="https://www.gov.br/receitafederal/pt-br/acesso-a-informacao/acoes-e-programas/programas-e-atividades/reforma-consumo/orientacoes-2026">Orientações 2026 da Receita Federal</a></li>
 <li><a href="https://www.gov.br/nfse/pt-br/biblioteca/documentacao-tecnica">Notas técnicas da NFS-e</a> · <a href="https://www.nfe.fazenda.gov.br/portal/listaConteudo.aspx?tipoConteudo=04BIflQt1aY=">Notas técnicas da NF-e</a></li>
-</ul><p class="note">A calculadora utiliza a tabela oficial de classificações tributárias para identificar os percentuais de redução da CBS.</p></details>
-<p class="note">Os XMLs são processados localmente no seu navegador; nenhum dado é enviado à API da Receita Federal. A simulação considera CBS nominal de 11,3%, aplicando o percentual de redução correspondente ao cClassTrib selecionado. Quando a NFS-e não informa os valores de PIS, COFINS ou ISS, a calculadora estima as deduções com os percentuais editáveis acima (padrão: PIS 1,65%, COFINS 7,60% e ISS 0%). A base também considera frete, seguro e outras despesas quando informados no XML. Resultado estimativo; confira o enquadramento e os parâmetros antes de utilizar fiscalmente.</p>
+</ul><p class="note">As tabelas oficiais CST/cClassTrib identificam códigos e percentuais associados. Elas, isoladamente, não comprovam o direito ao benefício para cada NCM/NBS, CNAE e operação. A validação só retorna VÁLIDO quando houver regra local expressa e vigente; sem matriz oficial suficiente, o sistema sinaliza NECESSITA ANÁLISE e não aplica redução não confirmada. As regras CNAE/NCM/NBS são atualizáveis por JSON em data/.</p></details>
+<p class="note">Os XMLs são processados localmente no seu navegador; nenhum dado é enviado à API da Receita Federal. A simulação considera CBS nominal de 11,3%. A redução vinculada ao cClassTrib é tratada como candidata e só é aplicada quando a validação independente confirma regra expressa para a operação; na ausência de matriz suficiente, calcula sem redução e sinaliza análise necessária. Quando a NFS-e não informa os valores de PIS, COFINS ou ISS, a calculadora estima as deduções com os percentuais editáveis acima (padrão: PIS 1,65%, COFINS 7,60% e ISS 0%). A base também considera frete, seguro e outras despesas quando informados no XML. Resultado estimativo; confira o enquadramento e os parâmetros antes de utilizar fiscalmente.</p>
 <footer><img src="assets/logo-logica.webp" alt="Lógica assessoria contábil"><span>Conte com a Lógica para ir além!</span></footer>
 </main>
 <script>
@@ -97,7 +97,7 @@ const pct=n=>n===undefined||n===null||n===""?"–":(Number(n)||0).toLocaleString
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const UFS={11:"RO",12:"AC",13:"AM",14:"RR",15:"PA",16:"AP",17:"TO",21:"MA",22:"PI",23:"CE",24:"RN",25:"PB",26:"PE",27:"AL",28:"SE",29:"BA",31:"MG",32:"ES",33:"RJ",35:"SP",41:"PR",42:"SC",43:"RS",50:"MS",51:"MT",52:"GO",53:"DF"};
 const TIPO={55:["NF-e","nfe"],65:["NFC-e","nfce"],57:["CT-e","cte"],91:["NFS-e","nfse"]};
-let docs=[],CL={};
+let docs=[],CL={},CST={},NCM={},NBS={},CNAE_RULES=[],NCM_RULES=[],NBS_RULES=[],SERVICE_RULES=[],LEGAL={};
 
 const T=(e,t)=>e?.getElementsByTagNameNS("*",t)[0];
 const V=(e,t)=>T(e,t)?.textContent.trim()??"";
@@ -107,22 +107,23 @@ const optionalN=(roots,names)=>{for(const root of roots){if(!root)continue;for(c
 function parse(xml,name){
   const d=new DOMParser().parseFromString(xml,"application/xml");
   if(d.querySelector("parsererror"))throw new Error("XML inválido");
-  const base={name,xml,res:null};
+  const base={name,xml,res:null,cnpj:"",cnaePrincipal:"",cnaesSec:[]};
   const nfe=T(d,"infNFe"),cte=T(d,"infCte"),nfs=T(d,"infNFSe")||T(d,"infDPS");
+  const emit=T(d,"emit")||T(d,"prest")||T(d,"Prestador"); base.cnpj=V(emit,"CNPJ")||V(emit,"CPF");
   if(nfe){
     const ide=T(nfe,"ide"),mod=+V(ide,"mod")||55;
     const itens=[...nfe.getElementsByTagNameNS("*","det")].map(det=>{
       const p=T(det,"prod"),imp=T(det,"imposto"),g=T(det,"IBSCBS");
-      return{n:+det.getAttribute("nItem"),cod:V(p,"NCM"),desc:V(p,"xProd"),qtd:N(p,"qCom")||1,un:V(p,"uCom")||"UN",
+      return{n:+det.getAttribute("nItem"),cod:V(p,"NCM"),cfop:V(p,"CFOP"),desc:V(p,"xProd"),qtd:N(p,"qCom")||1,un:V(p,"uCom")||"UN",
         bruto:N(p,"vProd")+N(p,"vFrete")+N(p,"vSeg")+N(p,"vOutro")-N(p,"vDesc"),
         imp:N(T(imp,"ICMS"),"vICMS")+N(T(imp,"ICMS"),"vFCP")+N(T(imp,"PIS"),"vPIS")+N(T(imp,"COFINS"),"vCOFINS"),ipi:N(T(imp,"IPI"),"vIPI"),is:N(T(imp,"IS"),"vIS"),
-        cst:V(g,"CST")||"000",cc:V(g,"cClassTrib")||"000001"}});
+        cst:V(g,"CST"),cc:V(g,"cClassTrib")}});
     return{...base,tp:mod,nf:V(ide,"nNF"),uf:V(T(nfe,"emit"),"UF"),mun:+V(ide,"cMunFG"),dh:V(ide,"dhEmi")||V(ide,"dEmi")+"T12:00:00-03:00",itens};
   }
   if(cte){
     const ide=T(cte,"ide"),mun=+V(ide,"cMunIni");
     return{...base,tp:57,nf:V(ide,"nCT"),uf:V(ide,"UFIni")||UFS[String(mun).slice(0,2)],mun,dh:V(ide,"dhEmi"),
-      itens:[{n:1,cod:"",desc:"Serviço de transporte",qtd:1,un:"UN",bruto:N(T(cte,"vPrest"),"vTPrest"),imp:0,cst:V(T(cte,"IBSCBS"),"CST")||"000",cc:V(T(cte,"IBSCBS"),"cClassTrib")||"000001"}]};
+      itens:[{n:1,cod:"",desc:"Serviço de transporte",qtd:1,un:"UN",bruto:N(T(cte,"vPrest"),"vTPrest"),imp:0,cst:V(T(cte,"IBSCBS"),"CST"),cc:V(T(cte,"IBSCBS"),"cClassTrib")}]};
   }
   if(nfs){
     // Na NFS-e padrão nacional, a classificação pode estar aninhada
@@ -135,10 +136,18 @@ function parse(xml,name){
     const numero=V(nfs,"nNFSe")||V(dps,"nDPS")||V(nfs,"nDPS");
     const data=V(dps,"dhEmi")||V(nfs,"dhEmi")||V(nfs,"dhProc")||V(dps,"dCompet")||V(nfs,"dCompet");
     const grupoServ=T(dps,"vServPrest")||T(nfs,"vServPrest");
+    const cServ=T(dps,"cServ")||T(nfs,"cServ")||dps;
+    // O código nacional do serviço (cTribNac) é distinto do NBS e do código municipal.
+    // Alguns provedores posicionam os campos em níveis diferentes do grupo cServ.
+    const serviceCode=(V(cServ,"cTribNac")||V(dps,"cTribNac")||V(nfs,"cTribNac")).replace(/\D/g,"");
+    const municipalServiceCode=(V(cServ,"cTribMun")||V(dps,"cTribMun")||V(nfs,"cTribMun")).replace(/\D/g,"");
+    const operationCode=(V(ibscbs,"cIndOp")||V(dps,"cIndOp")||V(nfs,"cIndOp")).replace(/\D/g,"");
+    const nationalServiceDescription=V(nfs,"xTribNac")||V(dps,"xTribNac");
+    const nbsDescription=V(cServ,"xNBS")||V(dps,"xNBS")||V(nfs,"xNBS");
     const grupoValores=T(dps,"valores")||T(nfs,"valores");
     const vServ=N(grupoServ,"vServ")||N(grupoValores,"vServ");
-    const cst=V(gTrib,"CST")||V(ibscbs,"CST")||"000";
-    const cc=V(gTrib,"cClassTrib")||V(ibscbs,"cClassTrib")||"000001";
+    const cst=V(gTrib,"CST")||V(ibscbs,"CST");
+    const cc=V(gTrib,"cClassTrib")||V(ibscbs,"cClassTrib");
     const roots=[dps,nfs,grupoValores];
     const tribMun=T(grupoValores,"tribMun")||T(dps,"tribMun")||T(nfs,"tribMun");
     const tribFed=T(grupoValores,"tribFed")||T(dps,"tribFed")||T(nfs,"tribFed");
@@ -147,7 +156,8 @@ function parse(xml,name){
     const cofins=optionalN([tribFed,...roots],["vCofins","vCOFINS"]);
     return{...base,tp:91,nf:numero,uf:UFS[String(mun).slice(0,2)],mun,
       dh:data.includes("T")?data:data+"T12:00:00-03:00",
-      itens:[{n:1,cod:(V(dps,"cNBS")||V(nfs,"cNBS")).replace(/\D/g,""),
+      itens:[{n:1,cod:(V(cServ,"cNBS")||V(dps,"cNBS")||V(nfs,"cNBS")).replace(/\D/g,""),
+        serviceCode,municipalServiceCode,operationCode,nationalServiceDescription,nbsDescription,
         desc:V(dps,"xDescServ")||V(nfs,"xDescServ"),qtd:1,un:"UN",
         bruto:vServ||N(grupoServ,"vServPrest"), imp:0, deducoes:{iss,pis,cofins}, cst,cc}]};
   }
@@ -157,6 +167,7 @@ function parse(xml,name){
 async function load(files){
   docs=[];const bad=[];
   for(const f of [...files]){try{docs.push(parse(await f.text(),f.name))}catch(e){bad.push(f.name+": "+e.message)}}
+  if(docs.length){const first=docs.find(x=>x.cnpj);if(first?.cnpj&&!$("cnpj").value)$("cnpj").value=first.cnpj}
   $("msg").textContent=docs.length+" documento(s) carregado(s)"+(bad.length?" · ignorados: "+bad.join("; "):"");
   $("go").disabled=!docs.length;$("csv").disabled=true;render();
   // Após a leitura do XML, inicia a validação/cálculo sem exigir clique adicional.
@@ -173,26 +184,21 @@ window.chg=(a,b,k,v)=>{const i=docs[a].itens[b];k==="cc"?setCC(i,v.trim()):i.cst
 
 // Carrega localmente as classificações e percentuais de redução preservados na pasta data.
 const carregarTabelas=(async()=>{
-  try{
-    const [grupos, classificacoes]=await Promise.all([
-      fetch("data/situacoes_tributarias_cbs_ibs.json").then(r=>r.json()),
-      fetch("data/classificacoes_tributarias_cbs_ibs.json").then(r=>r.json())
-    ]);
-    const cstPorCodigo={};
-    const walk=(lista,cst)=>{(lista||[]).forEach(g=>{
-      const codigo=String(g.codigo??cst??"").padStart(3,"0");
-      (g.classificacoesTributarias||[]).forEach(x=>cstPorCodigo[x.codigo]=codigo);
-    })};
-    walk(grupos);
-    classificacoes.forEach(x=>{
-      const codigo=String(x.codigo);
-      CL[codigo]={cst:cstPorCodigo[codigo]||"",d:x.descricao||"",redCBS:Number(x.percentualReducaoCbs)||0,
-        };
-    });
-    $("cl").innerHTML=Object.entries(CL).map(([k,v])=>`<option value="${k}">${esc(k+" — "+v.d)}</option>`).join("");
-    $("upd").textContent=" · classificações locais carregadas";
-  }catch(e){$("msg").textContent="Não foi possível carregar as tabelas locais de classificação: "+e.message}
+ try{
+ const names=["situacoes_tributarias_cbs_ibs.json","classificacoes_tributarias_cbs_ibs.json","ncm_vigentes.json","nbs_lista.json","regras_cnae_cbs.json","regras_ncm_cbs.json","regras_nbs_cbs.json","regras_servico_nfs_cbs.json","fundamentacoes_legais.json","meta_validacao.json","meta.json"];
+ const v=await Promise.all(names.map(f=>fetch("data/"+f).then(r=>{if(!r.ok)throw Error(f+" HTTP "+r.status);return r.json()})));
+ const [grupos,classes,ncm,nbs,cr,nr,sr,service,legal,meta,metaOrigem]=v;
+ grupos.forEach(g=>{const cst=String(g.codigo).padStart(3,"0");CST[cst]=g.descricao||"";g.classificacoesTributarias.forEach(x=>{if(CL[x.codigo])CL[x.codigo].cst=cst})});
+ classes.forEach(x=>{CL[x.codigo]={codigo:x.codigo,cst:"",d:x.descricao||"",redCBS:Number(x.percentualReducaoCbs)||0,nomenclatura:x.nomenclatura||"",dataAtualizacao:x.dataAtualizacao||""}});
+ grupos.forEach(g=>g.classificacoesTributarias.forEach(x=>{if(CL[x.codigo])CL[x.codigo].cst=String(g.codigo).padStart(3,"0")}));
+ ncm.forEach(x=>NCM[String(x.ncm).replace(/\\D/g,"")]=x.descricao);nbs.forEach(x=>NBS[String(x.codigo).replace(/\\D/g,"")]=x.descricao);
+ CNAE_RULES=cr.rules||[];NCM_RULES=nr.rules||[];NBS_RULES=sr.rules||[];SERVICE_RULES=service.rules||[];LEGAL=Object.fromEntries(legal.map(x=>[x.codigoClassificacaoTributaria,x]));
+ $("cl").innerHTML=Object.entries(CL).map(([k,v])=>`<option value="${k}">${esc(k+" — "+v.d)}</option>`).join("");
+ $("upd").textContent=" · cópia local das tabelas baixada em "+(metaOrigem.atualizadoEm||"data não informada")+" · base "+(metaOrigem.versao?.dataVersaoDb||"versão não informada");
+ }catch(e){$("msg").textContent="Falha ao carregar tabelas; validação indisponível: "+e.message;throw e}
 })();
+const digits=v=>String(v||"").replace(/\\D/g,"");
+$("applyCompany").onclick=()=>{const cn=digits($("cnpj").value),cp=digits($("cnaePrincipal").value),cs=$("cnaesSec").value.split(/[,;\\s]+/).map(digits).filter(Boolean);docs.forEach(d=>{d.cnpj=cn||d.cnpj;d.cnaePrincipal=cp;d.cnaesSec=cs});$("companyStatus").textContent=cp?"CNAE declarado manualmente; não confirmado em cadastro oficial.":"CNAE não informado.";calc()};
 // Base de cálculo estimada: valor do serviço/operação, com as deduções selecionadas para o período de 2026 a 2032.
 function deductionsOf(d,i){
   const y=+String(d.dh).slice(0,4);
@@ -215,7 +221,7 @@ async function renderHist(){
   h.hidden=false;
   h.innerHTML=`<details><summary><b>Histórico neste navegador</b> <span class="note">· ${l.length} nota(s) · só você vê, nada vai para servidor</span></summary>
   <div class="tw"><table><thead><tr><th>Data</th><th>Tipo</th><th>Nº</th><th>Arquivo</th><th class="n">CBS</th><th>Alertas</th><th></th></tr></thead><tbody>`+
-  l.sort((x,y)=>y.em-x.em).map(r=>{const c=r.itens.reduce((s,i)=>s+(i.cbs||0),0),p=r.itens.filter(i=>i.erros?.length).length;
+  l.sort((x,y)=>y.em-x.em).map(r=>{const c=r.itens.reduce((s,i)=>s+(i.cbs||0),0),p=r.itens.filter(i=>i.erros?.length||["INCOMPATÍVEL","NÃO IDENTIFICADO","NECESSITA ANÁLISE"].includes(i.validacao?.status)).length;
     return`<tr><td>${new Date(r.em).toLocaleString("pt-BR")}</td><td>${TIPO[r.tp]?.[0]||""}</td><td>${esc(r.nf)}</td><td>${esc(r.name)}</td><td class="n">${brl(c)}</td><td>${p||"–"}</td><td><button onclick="hAbrir(${r.id})">Abrir</button> <button onclick="hDel(${r.id})">Excluir</button></td></tr>`}).join("")+
   `</tbody></table></div><div class="bar"><button onclick="hLimpa()">Apagar todo o histórico</button></div></details>`;
 }
@@ -232,11 +238,45 @@ async function calc(){
       i.erros=[];i.alertas=[];
       const c=CL[i.cc]||{};
       const reducao=Number(c.redCBS)||0;
-      i.red=reducao;
-      i.aliqCBS=ALIQUOTA_CBS*(1-reducao/100);
+      i.red=0;i.aliqCBS=ALIQUOTA_CBS;
+      const cod=digits(i.cod),date=String(d.dh||"").slice(0,10),serv=d.tp===91,cat=serv?NBS:NCM;
+      const codeExists=!!(cod&&cat[cod]),cstExists=!!(i.cst&&CST[i.cst]),ccExists=!!(i.cc&&CL[i.cc]);
+      const pairOk=ccExists&&cstExists&&CL[i.cc].cst===i.cst,cnae=digits(d.cnaePrincipal||$("cnaePrincipal").value);
+      const rules=serv?NBS_RULES:NCM_RULES;
+      const active=r=>((!r.from||date>=r.from)&&(!r.to||date<=r.to));
+      const serviceCode=digits(i.serviceCode||"");
+      const serviceCandidates=serv&&serviceCode?SERVICE_RULES.filter(r=>digits(r.serviceCode)===serviceCode&&(!r.nbs||digits(r.nbs)===cod)&&(!r.cClassTrib||r.cClassTrib===i.cc)&&(!r.operationCode||digits(r.operationCode)===digits(i.operationCode))&&active(r)):[];
+      const serviceCorrelation=serviceCandidates[0]||null;
+      const ncmMatch=rules.find(r=>r.code===cod&&active(r)&&(!r.cClassTrib||r.cClassTrib===i.cc));
+      const cnaeMatch=CNAE_RULES.find(r=>(r.cnaes||[]).map(digits).includes(cnae)&&active(r)&&(!r.codes||r.codes.includes(cod)));
+      const candidates=[ncmMatch,cnaeMatch].filter(Boolean);
+      const conflicting=candidates.length>1&&new Set(candidates.map(r=>String(r.reduction))).size>1;
+      const match=ncmMatch||cnaeMatch;
+      let status="NECESSITA ANÁLISE",reasons=[];
+      if(!ccExists)reasons.push("cClassTrib ausente ou não localizado na tabela oficial.");
+      if(!cstExists)reasons.push("CST ausente ou não localizado na tabela oficial.");
+      if(ccExists&&cstExists&&!pairOk)reasons.push("Combinação CST + cClassTrib incompatível.");
+      if(!cod)reasons.push((serv?"NBS":"NCM")+" não informado.");else if(!codeExists)reasons.push((serv?"NBS":"NCM")+" não localizado no catálogo.");
+      if(!cnae)reasons.push("CNAE não informado.");
+      if(ccExists&&cstExists&&!pairOk)status="INCOMPATÍVEL";
+      else if((i.cc&&!ccExists)||(i.cst&&!cstExists)||(cod&&!codeExists))status="NÃO IDENTIFICADO";
+      else if(conflicting)reasons.push("Foram encontradas regras concorrentes com percentuais distintos; necessária análise manual, sem acumular reduções.");
+      else if(ccExists&&cstExists&&pairOk&&codeExists&&match&&(!match.requiresCnae||(cnae&&cnaeMatch)))status="VÁLIDO";
+      else {
+        if(serv&&!serviceCode)reasons.push("Código de tributação nacional do serviço (cTribNac) não localizado no XML; informe-o para permitir a consulta da correlação de serviço.");
+        else if(serv&&!serviceCorrelation){
+          const descServ=i.nationalServiceDescription||"descrição nacional não disponível";
+          const descNbs=i.nbsDescription||NBS[cod]||"descrição NBS não disponível";
+          reasons.push("Código nacional cTribNac "+serviceCode+" e NBS "+(cod||"não informado")+" foram extraídos separadamente. Serviço declarado: "+descServ+". Descrição NBS: "+descNbs+". A compatibilidade serviço + NBS + cIndOp + CST + cClassTrib não pode ser confirmada porque não há matriz oficial operacional carregada. A divergência descritiva é um alerta para conferência, não uma conclusão automática de incompatibilidade. O Anexo VIII do Portal NFS-e está em desenvolvimento e não possui regras de negócio em produção; necessária análise manual.");
+        }
+        reasons.push("Não existe matriz oficial completa para confirmar o enquadramento NCM/NBS + CNAE + operação + vigência. A redução associada ao cClassTrib não confirma, isoladamente, o direito ao benefício.");
+      }
+      const reduction=match?.reduction??reducao;
+      const appliedReduction=status==="VÁLIDO"?reduction:0;
+      i.red=appliedReduction;i.aliqCBS=ALIQUOTA_CBS*(1-appliedReduction/100);
+      i.validacao={status,reasons,cnae:cnae||"Não informado",nomenclature:serv?"NBS":"NCM",descricao:cat[cod]||"",codigoServico:serviceCode||"",codigoMunicipal:i.municipalServiceCode||"",codigoOperacao:i.operationCode||"",descricaoServico:i.nationalServiceDescription||"",descricaoNBS:i.nbsDescription||"",correlacaoServico:!!serviceCorrelation,reducao:status==="VÁLIDO"?reduction:null,reducaoCandidata:reducao,nominal:ALIQUOTA_CBS,efetiva:i.aliqCBS,fundamento:match?.legal||LEGAL[i.cc]?.textoCurto||"LC 214/2025 — hipótese específica não confirmada",fonte:match?.source||"Receita Federal/RTC — tabelas oficiais locais",atualizacao:match?.updatedAt||c.dataAtualizacao||"Não informada"};
+      if(status!=="VÁLIDO")i.alertas.push({detail:status+": "+reasons.join(" ")+" CBS calculada sem redução não confirmada."});
       i.cbs=+(baseOf(d,i)*i.aliqCBS/100).toFixed(2);
-      
-      if(!c.codigo && !CL[i.cc]) i.alertas.push({detail:"cClassTrib não localizado na tabela local; confira a classificação selecionada."});
     });
   }
   for(const d of docs)await hSave(d);
@@ -246,29 +286,29 @@ $("go").onclick=calc;
 
 function render(){
   const all=docs.flatMap(d=>d.itens),calcd=all.some(i=>i.cbs!==undefined);
-  const S=(f)=>all.reduce((s,i)=>s+(f(i)||0),0),bad=all.filter(i=>i.erros?.length).length;
+  const S=(f)=>all.reduce((s,i)=>s+(f(i)||0),0),bad=all.filter(i=>i.erros?.length||["INCOMPATÍVEL","NÃO IDENTIFICADO","NECESSITA ANÁLISE"].includes(i.validacao?.status)).length;
   $("sum").innerHTML=docs.length?`<div class="res"><div class="k"><span>Documentos</span><b>${docs.length}</b></div><div class="k"><span>Itens</span><b>${all.length}</b></div>
    <div class="k"><span>Itens com problema</span><b style="color:${bad?"var(--err)":"var(--ac)"}">${calcd?bad:"–"}</b></div>
    <div class="k"><span>CBS</span><b>${brl(S(i=>i.cbs))}</b></div></div>`:"";
   $("out").innerHTML=docs.map((d,a)=>{
     const rows=d.itens.map((i,b)=>{
       const st=i.erros?.length?`<td class="er">✗ ${i.erros.map(e=>esc((e.code?e.code+" · ":"")+(e.detail||e.title))).join("<br>")}</td>`:
-        i.alertas?.length?`<td class="wr">⚠ ${i.alertas.map(e=>esc(e.detail||e.title)).join("<br>")}</td>`:
-        i.cbs!==undefined?`<td class="ok">✓ Calculado</td>`:"<td></td>";
-      return`<tr><td>${i.n}</td><td title="${esc(i.desc)}">${esc(i.cod)||"–"}</td><td class="n">${brl(i.bruto)}</td><td class="n">${brl(deductionsOf(d,i))}</td><td class="n">${brl(baseOf(d,i))}</td>
+        i.validacao?`<td class="${i.validacao.status==="VÁLIDO"?"ok":i.validacao.status==="INCOMPATÍVEL"?"er":"wr"}"><b>${esc(i.validacao.status)}</b></td>`:"<td></td>";
+      return`<tr><td>${i.n}</td><td title="${esc(i.desc)}">${esc(i.cod)||"–"}</td>${d.tp===91?`<td title="Código nacional cTribNac">${esc(i.serviceCode||"não informado")}</td><td title="Indicador da operação cIndOp">${esc(i.operationCode||"não informado")}</td>`:""}<td>${esc(i.cfop||"–")}</td><td class="n">${brl(i.bruto)}</td><td class="n">${brl(deductionsOf(d,i))}</td><td class="n">${brl(baseOf(d,i))}</td>
       <td><input value="${esc(i.cst)}" style="width:50px" onchange="chg(${a},${b},'cst',this.value)"></td>
       <td><input value="${esc(i.cc)}" list="cl" onchange="chg(${a},${b},'cc',this.value)"></td><td class="d">${esc(CL[i.cc]?.d)}</td>
       <td class="n">${pct(i.aliqCBS)}</td><td class="n">${i.cbs!==undefined?brl(i.cbs):"–"}</td><td>${i.red!==undefined?esc(i.red)+"%":"–"}</td>${st}</tr>`}).join("");
     return`<div class="card"><b>${TIPO[d.tp][0]} ${esc(d.nf)}</b><span class="tag">${esc(d.uf)} · mun. ${d.mun}</span><span class="note"> ${esc(d.name)}</span>
      ${d.err?`<p class="er">${esc(d.err)}</p>`:""}${d.geral?.length?`<p class="er">${d.geral.map(e=>esc(e.detail||e.title)).join("<br>")}</p>`:""}
-     <div class="tw"><table><thead><tr><th>Item</th><th>${d.tp===91?"NBS":"NCM"}</th><th class="n">Valor bruto</th><th class="n">Deduções</th><th class="n">Base CBS</th><th>CST</th><th>cClassTrib</th><th>Tributação</th><th class="n">Alíquota CBS</th><th class="n">Valor CBS</th><th>Redução</th><th>Validação</th></tr></thead><tbody>${rows}</tbody></table></div>
+     <div class="tw"><table><thead><tr><th>Item</th><th>${d.tp===91?"NBS":"NCM"}</th>${d.tp===91?"<th>Cód. serviço</th><th>cIndOp</th>":""}<th>CFOP</th><th class="n">Valor bruto</th><th class="n">Deduções</th><th class="n">Base CBS</th><th>CST</th><th>cClassTrib</th><th>Tributação</th><th class="n">Alíquota CBS</th><th class="n">Valor CBS</th><th>Redução</th><th>Validação</th></tr></thead><tbody>${rows}</tbody></table></div>
+     ${d.itens.map(i=>i.validacao?`<details><summary>Validação fiscal — item ${i.n}: ${esc(i.validacao.status)}</summary><p class="note">CNAE: ${esc(i.validacao.cnae)} · ${i.validacao.nomenclature}: ${esc(i.cod||"não informado")} — ${esc(i.validacao.descricao)}${d.tp===91?" · Código de serviço cTribNac: "+esc(i.serviceCode||"não informado")+" · Código municipal: "+esc(i.municipalServiceCode||"não informado")+" · cIndOp: "+esc(i.operationCode||"não informado"):""}</p>${d.tp===91?`<p class="note">Descrição do serviço nacional: ${esc(i.nationalServiceDescription||"não informada")} · Descrição NBS: ${esc(i.nbsDescription||NBS[i.cod]||"não informada")}</p>`:""}<p class="note">Redução confirmada: ${i.validacao.reducao===null?"não confirmada":pct(i.validacao.reducao)} · Redução candidata do cClassTrib: ${pct(i.validacao.reducaoCandidata)} · CBS nominal: ${pct(i.validacao.nominal)} · CBS efetiva aplicada: ${pct(i.validacao.efetiva)}</p><p class="note">Fundamentação: ${esc(i.validacao.fundamento)} · Fonte: ${esc(i.validacao.fonte)} · Atualização: ${esc(i.validacao.atualizacao)}</p><p class="wr">${(i.validacao.reasons||[]).map(esc).join(" ")}</p></details>`:"").join("")}
      
      </div>`}).join("");
 }
 
 $("csv").onclick=()=>{
-  const l=[["Tipo","Numero","Item","NCM/NBS","Valor bruto","Deduções","Base CBS","CST","cClassTrib","Aliquota CBS (%)","Reducao CBS (%)","Valor CBS","Status"]];
-  docs.forEach(d=>d.itens.forEach(i=>l.push([TIPO[d.tp][0],d.nf,i.n,i.cod,i.bruto.toFixed(2),deductionsOf(d,i).toFixed(2),baseOf(d,i).toFixed(2),i.cst,i.cc,i.aliqCBS??"",i.red??"",(i.cbs||0).toFixed(2),(i.alertas||[]).map(e=>e.detail).join(" | ")||"Calculado localmente"])));
+  const l=[["Tipo","Numero","Item","NCM/NBS","Codigo servico cTribNac","Codigo municipal cTribMun","cIndOp","Valor bruto","Deduções","Base CBS","CST","cClassTrib","Aliquota CBS (%)","Reducao CBS (%)","Valor CBS","Status","CNAE analisado","Fundamentação","Fonte"]];
+  docs.forEach(d=>d.itens.forEach(i=>l.push([TIPO[d.tp][0],d.nf,i.n,i.cod,i.serviceCode||"",i.municipalServiceCode||"",i.operationCode||"",i.bruto.toFixed(2),deductionsOf(d,i).toFixed(2),baseOf(d,i).toFixed(2),i.cst,i.cc,i.aliqCBS??"",i.red??"",(i.cbs||0).toFixed(2),i.validacao?.status||"NECESSITA ANÁLISE",i.validacao?.cnae||"",i.validacao?.fundamento||"",i.validacao?.fonte||""])));
   const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\ufeff"+l.map(r=>r.join(";")).join("\n")],{type:"text/csv"}));a.download="calculadora-cbs.csv";a.click();
 };
 renderHist();
